@@ -58,9 +58,14 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github_token }}
       run: |
-        gh pr diff "${{ inputs.pr_number }}" 2>/dev/null \
-          | head -n "${{ inputs.diff_lines }}" > "$RUNNER_TEMP/pr_diff.txt"
+        set -euo pipefail
+        gh pr diff "${{ inputs.pr_number }}" \
+          | head -n "${{ inputs.diff_lines }}" > "$RUNNER_TEMP/pr_diff.txt" || true
         LINES=$(wc -l < "$RUNNER_TEMP/pr_diff.txt")
+        if [ "${LINES:-0}" -eq 0 ]; then
+          echo "::error::Diff is empty — gh pr diff may have failed or PR has no changes"
+          exit 1
+        fi
         echo "lines=$LINES" >> "$GITHUB_OUTPUT"
 
     - name: Run AI review
