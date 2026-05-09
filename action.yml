@@ -1,8 +1,7 @@
-name: AI PR Review
+name: AI PR Review Action
 description: >
-  Security-first AI code review. Free with GitHub Models — or bring your
-  Anthropic, OpenAI, or Gemini key. Leads every review with a sensitive-data
-  and credentials scan. No lock-in, no dashboard. MIT licensed.
+  Security-first AI code review. Free with GitHub Models or bring your own key.
+  Sensitive-data scan first. MIT licensed.
 
 author: Spyced Concepts Ltd. <https://spycedconcepts.co.uk>
 
