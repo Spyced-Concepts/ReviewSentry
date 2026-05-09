@@ -104,10 +104,11 @@ USER = (
 
 # ── Dispatch to adapter ───────────────────────────────────────────────────────
 
+module_name = PROVIDER.replace("-", "_")
 try:
-    adapter = importlib.import_module(f"adapters.{PROVIDER}")
+    adapter = importlib.import_module(f"adapters.{module_name}")
 except ModuleNotFoundError:
-    print(f"::error::Adapter module 'adapters/{PROVIDER}.py' not found")
+    print(f"::error::Adapter module 'adapters/{module_name}.py' not found")
     sys.exit(1)
 
 try:
