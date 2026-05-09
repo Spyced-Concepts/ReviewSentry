@@ -31,8 +31,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `README.md` rewritten — differentiation table, security-first positioning, GitHub Models as the zero-cost quick start, architecture diagram, provider comparison table
 - Review criteria renumbered — sensitive data disclosure is criterion 1 (was absent in v0.1.0)
 
-### Migration guide (v0.1.0 → v0.2.0-alpha)
-No breaking changes. Existing workflows that do not set `ai_provider` default to `anthropic` and behave identically to v0.1.0.
+### Breaking change
+
+**`ai_provider` is now required.** There is no default. This is an intentional choice — as an open-source, provider-agnostic tool we do not favour any particular AI. Existing workflows that did not set `ai_provider` will now fail with a clear error listing the supported providers.
+
+**Migration:** add `ai_provider: anthropic` (or your chosen provider) to any workflow that previously omitted it.
 
 ### Changed
 - Review criteria renumbered — sensitive data disclosure is now criterion 1 (was absent); all others shifted by one

@@ -29,7 +29,7 @@ Every review starts with a sensitive data disclosure scan — catching credentia
 
 | Provider | `ai_provider` | Cost | Notes |
 |---|---|---|---|
-| **GitHub Models** | `openai` + `ai_base_url` | **Free** | Uses your `GITHUB_TOKEN` — no extra account needed |
+| **GitHub Models** | `github-models` | **Free** | Uses your `GITHUB_TOKEN` — no extra account needed |
 | Anthropic | `anthropic` | Per-token | Prompt caching enabled — lower cost on repeated reviews |
 | OpenAI | `openai` | Per-token | |
 | Google Gemini | `gemini` | Per-token / free tier | |
@@ -37,14 +37,60 @@ Every review starts with a sensitive data disclosure scan — catching credentia
 | Azure OpenAI | `openai` + `ai_base_url` | Per-token | Enterprise data handling |
 | Ollama (self-hosted) | `openai` + `ai_base_url` | Free | Run locally or on your own server |
 
+**Required fields per provider:**
+
+| Provider | `ai_provider` | `ai_api_key` | `ai_model` | `ai_base_url` | `permissions` |
+|---|---|---|---|---|---|
+| GitHub Models | `github-models` | `${{ secrets.GITHUB_TOKEN }}` | e.g. `gpt-4o` | not needed | `models: read` |
+| Anthropic | `anthropic` | `${{ secrets.AI_API_KEY }}` | e.g. `claude-sonnet-4-6` | not needed | standard |
+| OpenAI | `openai` | `${{ secrets.AI_API_KEY }}` | e.g. `gpt-4o` | not needed | standard |
+| Groq | `openai` | `${{ secrets.AI_API_KEY }}` | e.g. `llama-3.3-70b-versatile` | `https://api.groq.com/openai` | standard |
+| Azure OpenAI | `openai` | `${{ secrets.AI_API_KEY }}` | your deployment name | your Azure endpoint | standard |
+| Gemini | `gemini` | `${{ secrets.AI_API_KEY }}` | e.g. `gemini-2.0-flash` | not needed | standard |
+| Ollama | `openai` | any value | e.g. `qwen2.5-coder` | your Ollama host | standard |
+
+> **Standard permissions:** `pull-requests: write` and `contents: read`. GitHub Models additionally requires `models: read`.
+>
+> **Secret and variable names are yours to choose.** The names `AI_API_KEY` and `AI_MODEL` used throughout this documentation are examples only. Store your key under any name you like and reference it with `${{ secrets.YOUR_CHOSEN_NAME }}`. The action only reads what you pass to its inputs — it has no dependency on specific environment variable names.
+
 **Full setup guides:** [`docs/`](docs/)
 
 ---
 
-## Quick start — GitHub Models (zero cost)
+## Quick start
 
-No secrets or variables to configure. Uses the `GITHUB_TOKEN` already available in every workflow.
+Choose your provider and add the workflow. `ai_provider` is required — no default is set so you make an explicit, informed choice.
 
+**GitHub Models** — free, uses your existing `GITHUB_TOKEN`, no extra account:
+```yaml
+          ai_api_key:  ${{ secrets.GITHUB_TOKEN }}
+          ai_model:    gpt-4o
+          ai_provider: github-models
+```
+> Requires `models: read` in your workflow permissions block.
+
+**Anthropic:**
+```yaml
+          ai_api_key:  ${{ secrets.YOUR_API_KEY }}
+          ai_model:    claude-sonnet-4-6
+          ai_provider: anthropic
+```
+
+**OpenAI:**
+```yaml
+          ai_api_key:  ${{ secrets.YOUR_API_KEY }}
+          ai_model:    gpt-4o
+          ai_provider: openai
+```
+
+**Gemini:**
+```yaml
+          ai_api_key:  ${{ secrets.YOUR_API_KEY }}
+          ai_model:    gemini-2.0-flash
+          ai_provider: gemini
+```
+
+**Full workflow file:**
 ```yaml
 # .github/workflows/ai-review.yml
 name: AI PR Review
@@ -59,21 +105,21 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
+      # models: read   # add this line if using github-models
     steps:
       - uses: actions/checkout@v4
       - uses: Spyced-Concepts/ai-pr-review@v1
         with:
-          ai_api_key:   ${{ secrets.GITHUB_TOKEN }}
-          ai_model:     gpt-4o
-          ai_provider:  openai
-          ai_base_url:  https://models.inference.ai.azure.com
+          ai_api_key:   ${{ secrets.YOUR_API_KEY }}
+          ai_model:     your-model-identifier
+          ai_provider:  your-provider     # anthropic | openai | gemini | github-models
           pr_number:    ${{ github.event.pull_request.number }}
           pr_title:     ${{ github.event.pull_request.title }}
           pr_body:      ${{ github.event.pull_request.body }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-For other providers, see the [setup guides](docs/).
+See the [setup guides](docs/) for provider-specific instructions and model lists.
 
 ---
 
@@ -88,7 +134,7 @@ For other providers, see the [setup guides](docs/).
 | `pr_number` | ✓ | — | Pull request number |
 | `pr_title` | ✓ | — | Pull request title |
 | `pr_body` | | `""` | Pull request description |
-| `diff_lines` | | `1500` | Max diff lines to send for review |
+| `diff_lines` | | `1500` | Max diff lines to send for review. If the diff exceeds this limit it is truncated and the review comment includes a visible warning: `> Diff was large — review based on first N lines only.` The action never fails due to diff size — it always posts a review, with the truncation note prepended when applicable. Reduce this value if you hit AI provider token limits; increase it for large refactors. |
 | `review_criteria` | | `""` | Additional review criteria, one per line |
 | `custom_rules` | | `""` | Custom sensitive data scan patterns, one per line |
 | `github_token` | ✓ | — | GitHub token for posting the review comment |
