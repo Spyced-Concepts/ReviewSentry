@@ -225,7 +225,7 @@
 - [x] UAT-009: TODO comment removed, UAT criterion removed from workflow ✓
 - [x] UAT-010: CORVEX_INTERNAL removed from source and workflow ✓
 - [ ] Final workflow action ref: change from `uat/v0.2.0-alpha-macbook` → `functional-test` once UAT complete
-- [ ] `AI_MODEL` variable in corvex-strike: revert to `claude-haiku-4-5-20251001` (set to `claude-sonnet-4-6` for UAT)
+- [x] `AI_MODEL` variable in corvex-strike: reverted to `claude-haiku-4-5-20251001` ✓ 2026-05-09
 
 **Test PRs:**
 - [ ] corvex-strike PR #3: close or merge when corvex-strike UAT is separately approved
