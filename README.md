@@ -1,4 +1,4 @@
-# AI PR Review
+# ReviewSentry
 
 **Security-first automated code review for every pull request. Free with GitHub Models — or bring your own Anthropic, OpenAI, or Gemini key.**
 

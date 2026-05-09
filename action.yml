@@ -1,4 +1,4 @@
-name: AI PR Review Action
+name: ReviewSentry
 description: >
   Security-first AI code review. Free with GitHub Models or bring your own key.
   Sensitive-data scan first. MIT licensed.
