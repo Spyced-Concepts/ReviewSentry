@@ -57,10 +57,40 @@ Every review starts with a sensitive data disclosure scan — catching credentia
 
 ---
 
-## Quick start — GitHub Models (zero cost)
+## Quick start
 
-No secrets or variables to configure. Uses the `GITHUB_TOKEN` already available in every workflow.
+Choose your provider and add the workflow. `ai_provider` is required — no default is set so you make an explicit, informed choice.
 
+**GitHub Models** — free, uses your existing `GITHUB_TOKEN`, no extra account:
+```yaml
+          ai_api_key:  ${{ secrets.GITHUB_TOKEN }}
+          ai_model:    gpt-4o
+          ai_provider: github-models
+```
+> Requires `models: read` in your workflow permissions block.
+
+**Anthropic:**
+```yaml
+          ai_api_key:  ${{ secrets.YOUR_API_KEY }}
+          ai_model:    claude-sonnet-4-6
+          ai_provider: anthropic
+```
+
+**OpenAI:**
+```yaml
+          ai_api_key:  ${{ secrets.YOUR_API_KEY }}
+          ai_model:    gpt-4o
+          ai_provider: openai
+```
+
+**Gemini:**
+```yaml
+          ai_api_key:  ${{ secrets.YOUR_API_KEY }}
+          ai_model:    gemini-2.0-flash
+          ai_provider: gemini
+```
+
+**Full workflow file:**
 ```yaml
 # .github/workflows/ai-review.yml
 name: AI PR Review
@@ -75,20 +105,21 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
+      # models: read   # add this line if using github-models
     steps:
       - uses: actions/checkout@v4
       - uses: Spyced-Concepts/ai-pr-review@v1
         with:
-          ai_api_key:   ${{ secrets.GITHUB_TOKEN }}
-          ai_model:     gpt-4o
-          ai_provider:  github-models
+          ai_api_key:   ${{ secrets.YOUR_API_KEY }}
+          ai_model:     your-model-identifier
+          ai_provider:  your-provider     # anthropic | openai | gemini | github-models
           pr_number:    ${{ github.event.pull_request.number }}
           pr_title:     ${{ github.event.pull_request.title }}
           pr_body:      ${{ github.event.pull_request.body }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-For other providers, see the [setup guides](docs/).
+See the [setup guides](docs/) for provider-specific instructions and model lists.
 
 ---
 

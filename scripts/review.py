@@ -7,7 +7,7 @@ the configured adapter, and writes the result to GITHUB_OUTPUT.
 Environment variables (set by action.yml):
     AI_API_KEY       — provider API key (from repository secret)
     AI_MODEL         — model identifier (from repository variable)
-    AI_PROVIDER      — adapter: anthropic | openai | gemini | github-models (default: anthropic)
+    AI_PROVIDER      — adapter: anthropic | openai | gemini | github-models (required — no default)
     AI_BASE_URL      — optional base URL override for OpenAI-compatible endpoints
     PR_TITLE         — pull request title
     PR_BODY          — pull request description (may be empty)
@@ -25,7 +25,7 @@ import urllib.error
 
 API_KEY   = os.environ.get("AI_API_KEY", "")
 MODEL     = os.environ.get("AI_MODEL", "")
-PROVIDER  = os.environ.get("AI_PROVIDER", "anthropic").strip().lower()
+PROVIDER  = os.environ.get("AI_PROVIDER", "").strip().lower()
 BASE_URL  = os.environ.get("AI_BASE_URL", "").strip()
 PR_TITLE  = os.environ.get("PR_TITLE", "")
 PR_BODY   = os.environ.get("PR_BODY", "")
@@ -39,6 +39,12 @@ if not API_KEY:
     sys.exit(1)
 if not MODEL:
     print("::error::AI_MODEL variable not configured")
+    sys.exit(1)
+if not PROVIDER:
+    print(
+        f"::error::AI_PROVIDER is required. "
+        f"Supported: {', '.join(sorted(SUPPORTED_PROVIDERS))}"
+    )
     sys.exit(1)
 if PROVIDER not in SUPPORTED_PROVIDERS:
     print(
