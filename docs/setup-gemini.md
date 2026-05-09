@@ -1,3 +1,14 @@
+---
+provider: gemini
+adapter: gemini
+requires_paid_account: false
+api_key_source: aistudio.google.com
+setup_complexity: low
+available_models: [gemini-2.0-flash, gemini-1.5-pro, gemini-1.5-flash]
+free_tier: true
+prompt_caching: false
+---
+
 # Setup — Google Gemini
 
 ## Prerequisites

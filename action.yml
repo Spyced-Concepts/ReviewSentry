@@ -1,9 +1,8 @@
 name: AI PR Review
 description: >
-  AI-powered automated PR review. Provider-agnostic — works with Anthropic,
-  OpenAI, Gemini, and any OpenAI-compatible endpoint. Posts a structured
-  review comment covering sensitive data disclosure, correctness, security,
-  code quality, cross-platform compatibility, and documentation standards.
+  Security-first AI code review. Free with GitHub Models — or bring your
+  Anthropic, OpenAI, or Gemini key. Leads every review with a sensitive-data
+  and credentials scan. No lock-in, no dashboard. MIT licensed.
 
 author: Spyced Concepts Ltd. <https://spycedconcepts.co.uk>
 

@@ -1,3 +1,13 @@
+---
+provider: anthropic
+adapter: anthropic
+requires_paid_account: true
+api_key_source: console.anthropic.com
+setup_complexity: low
+available_models: [claude-sonnet-4-6, claude-opus-4-7, claude-haiku-4-5-20251001]
+prompt_caching: true
+---
+
 # Setup — Anthropic
 
 ## Prerequisites

@@ -1,3 +1,14 @@
+---
+provider: openai
+adapter: openai
+requires_paid_account: true
+api_key_source: platform.openai.com
+setup_complexity: low
+available_models: [gpt-4o, gpt-4o-mini, o1-mini]
+compatible_endpoints: [groq, azure-openai, mistral, ollama, github-models]
+prompt_caching: false
+---
+
 # Setup — OpenAI (and OpenAI-compatible providers)
 
 The OpenAI adapter works with any provider that implements the OpenAI Chat Completions API — including Groq, Azure OpenAI, Mistral, Ollama, and others.
