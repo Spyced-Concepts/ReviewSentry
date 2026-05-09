@@ -1,9 +1,8 @@
 name: AI PR Review
 description: >
-  AI-powered automated PR review. Provider-agnostic — works with any AI that
-  accepts an API key and model identifier. Posts a structured review comment
-  covering correctness, security, code quality, cross-platform compatibility,
-  and documentation standards.
+  Security-first AI code review. Free with GitHub Models — or bring your
+  Anthropic, OpenAI, or Gemini key. Leads every review with a sensitive-data
+  and credentials scan. No lock-in, no dashboard. MIT licensed.
 
 author: Spyced Concepts Ltd. <https://spycedconcepts.co.uk>
 
@@ -17,9 +16,23 @@ inputs:
     required: true
   ai_model:
     description: >
-      Model identifier for your AI provider
-      (e.g. claude-sonnet-4-6, gpt-4o, gemini-1.5-pro).
+      Model identifier for your AI provider.
+      Examples: claude-sonnet-4-6 (Anthropic), gpt-4o (OpenAI), gemini-2.0-flash (Gemini).
     required: true
+  ai_provider:
+    description: >
+      AI provider adapter to use: anthropic, openai, or gemini.
+      Default: anthropic. Use openai for any OpenAI-compatible endpoint
+      (Groq, Azure OpenAI, Mistral, Ollama) combined with ai_base_url.
+    required: false
+    default: "anthropic"
+  ai_base_url:
+    description: >
+      Optional base URL override for OpenAI-compatible endpoints.
+      Example: https://api.groq.com/openai for Groq.
+      Leave empty to use the provider's default endpoint.
+    required: false
+    default: ""
   pr_number:
     description: Pull request number to review.
     required: true
@@ -38,6 +51,13 @@ inputs:
     description: >
       Additional review criteria to append to the standard checklist.
       Plain text, one criterion per line.
+    required: false
+    default: ""
+  custom_rules:
+    description: >
+      Custom sensitive data scan rules (one per line). Applied in addition
+      to built-in sensitive data checks. Use for domain-specific terms,
+      product names, or internal identifiers.
     required: false
     default: ""
   github_token:
@@ -74,10 +94,13 @@ runs:
       env:
         AI_API_KEY:       ${{ inputs.ai_api_key }}
         AI_MODEL:         ${{ inputs.ai_model }}
+        AI_PROVIDER:      ${{ inputs.ai_provider }}
+        AI_BASE_URL:      ${{ inputs.ai_base_url }}
         PR_TITLE:         ${{ inputs.pr_title }}
         PR_BODY:          ${{ inputs.pr_body }}
         PR_NUMBER:        ${{ inputs.pr_number }}
         REVIEW_CRITERIA:  ${{ inputs.review_criteria }}
+        CUSTOM_RULES:     ${{ inputs.custom_rules }}
         DIFF_LINES_LIMIT: ${{ inputs.diff_lines }}
       run: python3 "${{ github.action_path }}/scripts/review.py"
 

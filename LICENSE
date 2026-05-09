@@ -25,3 +25,36 @@ SOFTWARE.
 Governing law: This software is provided under the laws of England and Wales.
 Any disputes arising in connection with this licence shall be subject to the
 exclusive jurisdiction of the courts of England and Wales.
+
+---
+
+## Data Handling Notice
+
+This software facilitates the transmission of pull request content (code diffs
+and metadata) to third-party artificial intelligence service providers chosen
+and configured solely by the user. By using this software, you acknowledge and
+agree that:
+
+1. **User responsibility.** You are solely responsible for ensuring that any
+   transmission of code, data, or metadata to a third-party AI provider
+   complies with your applicable laws and regulations (including but not limited
+   to data protection and privacy law), your intellectual property rights and
+   obligations, any contractual commitments you hold with third parties, and the
+   terms of service and acceptable use policies of your chosen AI provider.
+
+2. **No warranty regarding third parties.** The authors and copyright holders
+   make no representation or warranty, express or implied, regarding the
+   security, privacy practices, data retention policies, legal compliance, or
+   fitness for any particular purpose of any third-party AI service. You are
+   solely responsible for reviewing and accepting the data handling and privacy
+   policies of any AI provider you configure.
+
+3. **No liability for transmitted content.** The authors and copyright holders
+   accept no liability of any kind arising from the content transmitted to, the
+   processing of that content by, or any actions taken by, third-party AI
+   providers as a result of your use of this software.
+
+4. **Security decisions are yours.** The built-in sensitive data scan is
+   provided as a best-effort automated check. It does not constitute a guarantee
+   that no sensitive data will be transmitted. You remain responsible for
+   reviewing what you allow this software to transmit on your behalf.
