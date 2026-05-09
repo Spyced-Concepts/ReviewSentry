@@ -88,7 +88,7 @@ For other providers, see the [setup guides](docs/).
 | `pr_number` | ✓ | — | Pull request number |
 | `pr_title` | ✓ | — | Pull request title |
 | `pr_body` | | `""` | Pull request description |
-| `diff_lines` | | `1500` | Max diff lines to send for review |
+| `diff_lines` | | `1500` | Max diff lines to send for review. If the diff exceeds this limit it is truncated and the review comment includes a visible warning: `> Diff was large — review based on first N lines only.` The action never fails due to diff size — it always posts a review, with the truncation note prepended when applicable. Reduce this value if you hit AI provider token limits; increase it for large refactors. |
 | `review_criteria` | | `""` | Additional review criteria, one per line |
 | `custom_rules` | | `""` | Custom sensitive data scan patterns, one per line |
 | `github_token` | ✓ | — | GitHub token for posting the review comment |

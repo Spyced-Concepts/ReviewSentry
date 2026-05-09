@@ -44,6 +44,7 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
+      models: read          # required for GitHub Models access
     steps:
       - uses: actions/checkout@v4
       - uses: Spyced-Concepts/ai-pr-review@v1
