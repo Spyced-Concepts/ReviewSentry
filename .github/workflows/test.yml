@@ -8,12 +8,59 @@ on:
 
 jobs:
   syntax-check:
-    name: Python syntax check
+    name: Syntax check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check review.py syntax
-        run: python3 -c "import ast; ast.parse(open('scripts/review.py').read()); print('OK')"
+
+      - name: Check core review.py
+        run: python3 -c "import ast; ast.parse(open('scripts/review.py').read()); print('review.py OK')"
+
+      - name: Check adapters
+        run: |
+          for f in scripts/adapters/*.py; do
+            [ "$f" = "scripts/adapters/__init__.py" ] && continue
+            python3 -c "import ast; ast.parse(open('$f').read()); print('$f OK')"
+          done
+
       - name: Check action.yml is valid YAML
-        run: python3 -c "import yaml; yaml.safe_load(open('action.yml')); print('OK')"
-        # yaml module required: pip install pyyaml
+        run: |
+          python3 -c "
+          import yaml
+          with open('action.yml') as f:
+              data = yaml.safe_load(f)
+          assert 'inputs' in data, 'action.yml missing inputs'
+          assert 'runs' in data, 'action.yml missing runs'
+          print('action.yml OK')
+          "
+
+      - name: Check adapter interface
+        run: |
+          python3 - <<'EOF'
+          import ast, sys, os
+
+          required_sig = {"api_key", "model", "system", "user", "base_url"}
+          adapters_dir = "scripts/adapters"
+          errors = []
+
+          for fname in os.listdir(adapters_dir):
+              if fname == "__init__.py" or not fname.endswith(".py"):
+                  continue
+              path = os.path.join(adapters_dir, fname)
+              tree = ast.parse(open(path).read())
+              funcs = {n.name: n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
+              if "call_api" not in funcs:
+                  errors.append(f"{fname}: missing call_api()")
+                  continue
+              fn = funcs["call_api"]
+              args = {a.arg for a in fn.args.args}
+              missing = required_sig - args
+              if missing:
+                  errors.append(f"{fname}: call_api() missing args: {missing}")
+
+          if errors:
+              for e in errors:
+                  print(f"::error::{e}")
+              sys.exit(1)
+          print("All adapters implement call_api() correctly")
+          EOF
