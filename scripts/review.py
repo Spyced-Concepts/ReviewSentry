@@ -7,7 +7,7 @@ the configured adapter, and writes the result to GITHUB_OUTPUT.
 Environment variables (set by action.yml):
     AI_API_KEY       — provider API key (from repository secret)
     AI_MODEL         — model identifier (from repository variable)
-    AI_PROVIDER      — adapter: anthropic | openai | gemini (default: anthropic)
+    AI_PROVIDER      — adapter: anthropic | openai | gemini | github-models (default: anthropic)
     AI_BASE_URL      — optional base URL override for OpenAI-compatible endpoints
     PR_TITLE         — pull request title
     PR_BODY          — pull request description (may be empty)
@@ -32,7 +32,7 @@ PR_BODY   = os.environ.get("PR_BODY", "")
 PR_NUM    = os.environ.get("PR_NUMBER", "")
 EXTRA     = os.environ.get("REVIEW_CRITERIA", "")
 
-SUPPORTED_PROVIDERS = {"anthropic", "openai", "gemini"}
+SUPPORTED_PROVIDERS = {"anthropic", "openai", "gemini", "github-models"}
 
 if not API_KEY:
     print("::error::AI_API_KEY secret not configured")

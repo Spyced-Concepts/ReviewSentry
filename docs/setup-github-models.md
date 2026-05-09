@@ -1,6 +1,6 @@
 ---
 provider: github-models
-adapter: openai
+adapter: github-models
 requires_paid_account: false
 api_key_source: GITHUB_TOKEN
 setup_complexity: minimal
@@ -51,8 +51,7 @@ jobs:
         with:
           ai_api_key:   ${{ secrets.GITHUB_TOKEN }}
           ai_model:     gpt-4o
-          ai_provider:  openai
-          ai_base_url:  https://models.inference.ai.azure.com
+          ai_provider:  github-models
           pr_number:    ${{ github.event.pull_request.number }}
           pr_title:     ${{ github.event.pull_request.title }}
           pr_body:      ${{ github.event.pull_request.body }}

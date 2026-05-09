@@ -29,13 +29,27 @@ Every review starts with a sensitive data disclosure scan — catching credentia
 
 | Provider | `ai_provider` | Cost | Notes |
 |---|---|---|---|
-| **GitHub Models** | `openai` + `ai_base_url` | **Free** | Uses your `GITHUB_TOKEN` — no extra account needed |
+| **GitHub Models** | `github-models` | **Free** | Uses your `GITHUB_TOKEN` — no extra account needed |
 | Anthropic | `anthropic` | Per-token | Prompt caching enabled — lower cost on repeated reviews |
 | OpenAI | `openai` | Per-token | |
 | Google Gemini | `gemini` | Per-token / free tier | |
 | Groq | `openai` + `ai_base_url` | Per-token / free tier | Fast inference |
 | Azure OpenAI | `openai` + `ai_base_url` | Per-token | Enterprise data handling |
 | Ollama (self-hosted) | `openai` + `ai_base_url` | Free | Run locally or on your own server |
+
+**Required fields per provider:**
+
+| Provider | `ai_provider` | `ai_api_key` | `ai_model` | `ai_base_url` | `permissions` |
+|---|---|---|---|---|---|
+| GitHub Models | `github-models` | `${{ secrets.GITHUB_TOKEN }}` | e.g. `gpt-4o` | not needed | `models: read` |
+| Anthropic | `anthropic` | `${{ secrets.AI_API_KEY }}` | e.g. `claude-sonnet-4-6` | not needed | standard |
+| OpenAI | `openai` | `${{ secrets.AI_API_KEY }}` | e.g. `gpt-4o` | not needed | standard |
+| Groq | `openai` | `${{ secrets.AI_API_KEY }}` | e.g. `llama-3.3-70b-versatile` | `https://api.groq.com/openai` | standard |
+| Azure OpenAI | `openai` | `${{ secrets.AI_API_KEY }}` | your deployment name | your Azure endpoint | standard |
+| Gemini | `gemini` | `${{ secrets.AI_API_KEY }}` | e.g. `gemini-2.0-flash` | not needed | standard |
+| Ollama | `openai` | any value | e.g. `qwen2.5-coder` | your Ollama host | standard |
+
+> **Standard permissions:** `pull-requests: write` and `contents: read`. GitHub Models additionally requires `models: read`.
 
 **Full setup guides:** [`docs/`](docs/)
 
@@ -65,8 +79,7 @@ jobs:
         with:
           ai_api_key:   ${{ secrets.GITHUB_TOKEN }}
           ai_model:     gpt-4o
-          ai_provider:  openai
-          ai_base_url:  https://models.inference.ai.azure.com
+          ai_provider:  github-models
           pr_number:    ${{ github.event.pull_request.number }}
           pr_title:     ${{ github.event.pull_request.title }}
           pr_body:      ${{ github.event.pull_request.body }}
