@@ -50,6 +50,8 @@ Every review starts with a sensitive data disclosure scan — catching credentia
 | Ollama | `openai` | any value | e.g. `qwen2.5-coder` | your Ollama host | standard |
 
 > **Standard permissions:** `pull-requests: write` and `contents: read`. GitHub Models additionally requires `models: read`.
+>
+> **Secret and variable names are yours to choose.** The names `AI_API_KEY` and `AI_MODEL` used throughout this documentation are examples only. Store your key under any name you like and reference it with `${{ secrets.YOUR_CHOSEN_NAME }}`. The action only reads what you pass to its inputs — it has no dependency on specific environment variable names.
 
 **Full setup guides:** [`docs/`](docs/)
 

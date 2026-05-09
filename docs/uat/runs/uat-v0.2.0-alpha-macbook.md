@@ -79,86 +79,70 @@
 
 ### UAT-002 — Large diff truncation note
 
-**Setup:** Set `diff_lines: 10` in the workflow to force truncation on any PR.
-
-**Expected:** Review comment contains `> Diff was large — review based on first 10 lines only.`
+**Setup:** Set `diff_lines: 10` in corvex-strike workflow. Run 25609669842.
 
 | Check | Result | Notes |
 |---|---|---|
-| Workflow run completes without error | | |
-| Truncation note present in comment | | |
-| Note references the correct line limit (10) | | |
+| Workflow run completes without error | ✅ | 26 seconds |
+| Truncation note present in comment | ✅ | `> Diff was large — review based on first 10 lines only.` |
+| Note references the correct line limit (10) | ✅ | |
 
-**Result:**
-**Notes:**
+**Result:** ✅ Pass
 
 ---
 
 ### UAT-003 — Missing AI_API_KEY
 
-**Setup:** Temporarily remove the `AI_API_KEY` secret from corvex-strike. Re-run or open a new PR.
-
-**Expected:** Workflow fails. Log contains `::error::AI_API_KEY secret not configured`.
+**Setup:** Passed empty string as `ai_api_key` in workflow (run 25609713760).
 
 | Check | Result | Notes |
 |---|---|---|
-| Workflow fails (non-zero exit) | | |
-| Error message clear and actionable | | |
-| No partial review posted | | |
+| Workflow fails (non-zero exit) | ✅ | 6 seconds |
+| Error message clear and actionable | ✅ | `AI_API_KEY secret not configured` |
+| No partial review posted | ✅ | |
 
-**Result:**
-**Notes:**
+**Result:** ✅ Pass
 
 ---
 
 ### UAT-004 — Missing AI_MODEL
 
-**Setup:** Remove the `AI_MODEL` variable from corvex-strike. Open a PR or re-run.
-
-**Expected:** Workflow fails with `::error::AI_MODEL variable not configured`.
+**Setup:** Passed empty string as `ai_model` in workflow (run 25609732479).
 
 | Check | Result | Notes |
 |---|---|---|
-| Workflow fails (non-zero exit) | | |
-| Error message clear and actionable | | |
+| Workflow fails (non-zero exit) | ✅ | 6 seconds |
+| Error message clear and actionable | ✅ | `AI_MODEL variable not configured` |
 
-**Result:**
-**Notes:**
+**Result:** ✅ Pass
 
 ---
 
 ### UAT-005 — Invalid API key
 
-**Setup:** Set `AI_API_KEY` to `sk-ant-INVALID000000000000000000000` in corvex-strike secrets.
-
-**Expected:** Workflow fails with HTTP 401 error visible in log.
+**Setup:** Set `ai_api_key` to a syntactically valid but invalid key.
 
 | Check | Result | Notes |
 |---|---|---|
-| Workflow fails (non-zero exit) | | |
-| HTTP error code visible in log | | |
-| No partial review posted | | |
+| Workflow fails (non-zero exit) | ✅ | |
+| HTTP error code visible in log | ✅ | `API HTTP error 401: authentication_error: invalid x-api-key` |
+| No partial review posted | ✅ | |
 
-**Result:**
-**Notes:**
+**Result:** ✅ Pass
 
 ---
 
 ### UAT-006 — Unknown AI_PROVIDER value
 
-**Setup:** Set `ai_provider: notarealai` in the workflow file temporarily.
-
-**Expected:** Workflow fails with `::error::Unknown AI_PROVIDER 'notarealai'. Supported: anthropic, gemini, openai`.
+**Setup:** Set `ai_provider: notarealai` in workflow.
 
 | Check | Result | Notes |
 |---|---|---|
-| Workflow fails (non-zero exit) | | |
-| Error lists all supported providers | | |
+| Workflow fails (non-zero exit) | ✅ | |
+| Error lists all supported providers | ✅ | `Supported: anthropic, gemini, github-models, openai` |
 
-**Result:**
-**Notes:**
+**Result:** ✅ Pass
 
----
 
 ### UAT-007 — Sensitive data detected in diff
 
