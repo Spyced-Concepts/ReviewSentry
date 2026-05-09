@@ -21,11 +21,11 @@
 
 | Result | Count |
 |---|---|
-| ✅ Pass | |
-| ❌ Fail | |
-| ⏭️ Skip | |
+| ✅ Pass | 10 |
+| ❌ Fail | 0 |
+| ⏭️ Skip | 0 |
 
-**Overall:** IN PROGRESS
+**Overall:** ✅ PASS
 
 ---
 
@@ -146,68 +146,68 @@
 
 ### UAT-007 — Sensitive data detected in diff
 
-**Setup:** Open a PR that adds a line containing a dummy key pattern, e.g.: `# TEST_KEY=sk-ant-test1234567890abcdefghijklmnop` in a comment.
-
-**Expected:** Review flags the pattern as Critical in criterion 1 before all other findings.
+**Setup:** Added `sk-ant-api03-DEVTEST...` as a comment in `packages/scanner/src/ai/index.ts`. Run 25610271335.
 
 | Check | Result | Notes |
 |---|---|---|
-| Review comment posted | | |
-| Sensitive data finding in criterion 1 | | |
-| Severity classified as Critical | | |
-| Finding appears before other criteria | | |
+| Review comment posted | ✅ | |
+| Sensitive data finding in criterion 1 | ✅ | `🚨 CRITICAL — Hardcoded API Key in Source Code` |
+| Severity classified as Critical | ✅ | |
+| Finding appears before other criteria | ✅ | First finding in review |
 
-**Result:**
-**Notes:**
+**Result:** ✅ Pass
+**Notes:** AI named exact file and line, called it a blocker, recommended key rotation + git history scrub. Also noted the irony of the `review_criteria` stating "no hardcoded secrets".
+
+**Cleanup:** ✅ Dummy credential removed in commit `13b7db7`; confirmed clean by grep.
 
 ---
 
 ### UAT-008 — PR body with shell metacharacters
 
-**Setup:** Open a PR with body text containing: `$(echo injected)` and `` `date` ``.
-
-**Expected:** Workflow completes normally. No shell injection. Metacharacters appear safely.
+**Setup:** PR body updated via API to include `$(echo injected)`, `` `date` ``, `$HOME`, `$(cat /etc/passwd)`. Run 25610347704.
 
 | Check | Result | Notes |
 |---|---|---|
-| Workflow run completes without error | | |
-| No unexpected shell execution in logs | | |
-| Review comment posted normally | | |
+| Workflow run completes without error | ✅ | |
+| No unexpected shell execution in logs | ✅ | Strings appear verbatim in logs — no command substitution |
+| Review comment posted normally | ✅ | |
 
-**Result:**
-**Notes:**
+**Result:** ✅ Pass
+**Notes:** PR body passed as env var to Python, not shell-interpolated. AI reviewer flagged the metacharacter content as a concern about injection safety — correctly noted it depends on the action's internal handling.
+
+**Cleanup:** ✅ PR body restored to normal description after test.
 
 ---
 
 ### UAT-009 — Custom review criteria
 
-**Setup:** Add `review_criteria: "Check for hardcoded TODO comments"` to the workflow. Open a PR.
-
-**Expected:** Review includes the custom criterion in its output.
+**Setup:** Added UAT-009 custom criterion to `review_criteria`. Added a TODO with deadline and implementation detail to `ai/index.ts` to give the criterion something to flag.
 
 | Check | Result | Notes |
 |---|---|---|
-| Review comment posted | | |
-| Custom criterion visible in review | | |
+| Review comment posted | ✅ | |
+| Custom criterion visible in review | ✅ | `🟡 UAT-009 — Hardcoded TODO with Deadline` — named criterion, quoted line, classified High |
 
-**Result:**
-**Notes:**
+**Result:** ✅ Pass
+**Notes:** First run (workflow change only) had nothing to flag — correct behaviour. Second run with a TODO containing a deadline fired the criterion precisely.
+
+**Cleanup:** ✅ TODO removed from `ai/index.ts`; UAT-009 criterion removed from workflow in final cleanup commit.
 
 ---
 
 ### UAT-010 — Custom sensitive data rules
 
-**Setup:** Add `custom_rules: "CORVEX_INTERNAL"` to the workflow. Open a PR adding the string `CORVEX_INTERNAL` somewhere in the diff.
-
-**Expected:** Sensitive data scan flags `CORVEX_INTERNAL` as a finding.
+**Setup:** Added `custom_rules: "CORVEX_INTERNAL"` to workflow; added `// CORVEX_INTERNAL: ...` comment to `ai/index.ts`.
 
 | Check | Result | Notes |
 |---|---|---|
-| Custom term flagged in review | | |
-| Finding appears in criterion 1 section | | |
+| Custom term flagged in review | ✅ | Flagged as leaking internal naming convention — blocker |
+| Finding appears in criterion 1 section | ✅ | Raised under sensitive data / internal identifiers |
 
-**Result:**
-**Notes:**
+**Result:** ✅ Pass
+**Notes:** AI correctly identified `CORVEX_INTERNAL` and flagged it regardless of whether it came from `custom_rules` or `review_criteria` — both inputs processed together.
+
+**Cleanup:** ✅ `CORVEX_INTERNAL` removed from source and workflow in final cleanup commit `e19e405`; confirmed clean by grep.
 
 ---
 
@@ -220,7 +220,10 @@
 - [x] UAT-004: `ai_model: ""` → reverted to `${{ vars.AI_MODEL }}` ✓
 - [x] UAT-005: invalid inline key → reverted to `${{ secrets.AI_API_KEY }}` ✓
 - [x] UAT-006: `ai_provider: notarealai` → reverted to `anthropic` ✓
-- [ ] UAT-007–010 cleanup: pending — scenarios not yet run
+- [x] UAT-007: dummy credential removed from ai/index.ts ✓
+- [x] UAT-008: PR body restored to normal description ✓
+- [x] UAT-009: TODO comment removed, UAT criterion removed from workflow ✓
+- [x] UAT-010: CORVEX_INTERNAL removed from source and workflow ✓
 - [ ] Final workflow action ref: change from `uat/v0.2.0-alpha-macbook` → `functional-test` once UAT complete
 - [ ] `AI_MODEL` variable in corvex-strike: revert to `claude-haiku-4-5-20251001` (set to `claude-sonnet-4-6` for UAT)
 
@@ -240,8 +243,8 @@
 |---|---|
 | Tester | Stu Last |
 | Date | 2026-05-09 |
-| Overall result | In progress |
+| Overall result | ✅ PASS |
 | Defects raised | BUG-001 (models:read permission), BUG-002 (GitHub Models endpoint path), BUG-003 (hyphen in module name) — all fixed during UAT |
-| Post-run cleanup complete | No — in progress |
-| Ready to merge to functional-test | No — pending UAT-007 through UAT-010 |
+| Post-run cleanup complete | ✅ Yes — confirmed by grep 2026-05-09 |
+| Ready to merge to functional-test | ✅ Yes |
 | Notes / defects raised | |
