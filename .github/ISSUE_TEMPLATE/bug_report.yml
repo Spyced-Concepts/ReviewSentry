@@ -1,0 +1,72 @@
+name: Bug report
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as you can — it helps us fix things faster.
+
+        **Do not include API keys, secrets, or sensitive code in this report.**
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: AI provider
+      description: Which `ai_provider` value were you using?
+      options:
+        - anthropic
+        - openai
+        - gemini
+        - github-models
+        - openai (Groq)
+        - openai (Azure OpenAI)
+        - openai (Ollama)
+        - Other / unknown
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Action version
+      description: Which tag or ref were you using? (e.g. `@v0`, `@v0.2.2-alpha`)
+      placeholder: "@v0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the unexpected behaviour. Include the error message from the Actions log if there is one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: What should have happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow step (redacted)
+      description: >
+        Paste the relevant `uses:` step from your workflow — redact any secret names or values.
+        Example: replace `${{ secrets.MY_KEY }}` with `${{ secrets.REDACTED }}`.
+      render: yaml
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Paste the relevant lines from the Actions run log. Redact any secrets.
+      render: shell
+    validations:
+      required: false
