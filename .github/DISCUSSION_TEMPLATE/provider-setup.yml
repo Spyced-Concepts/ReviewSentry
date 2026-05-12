@@ -1,0 +1,33 @@
+title: "[Setup] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Need help setting up ReviewSentry with a specific provider, or got a setup tip to share? This is the place.
+
+        Before posting, check the [setup guides](https://github.com/Spyced-Concepts/ai-pr-review/tree/main/docs) — your question may already be answered there.
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options:
+        - anthropic
+        - openai
+        - gemini
+        - github-models
+        - openai (Groq)
+        - openai (Azure OpenAI)
+        - openai (Ollama / self-hosted)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question or tip
+      description: What do you need help with, or what did you figure out that others might find useful?
+    validations:
+      required: true
