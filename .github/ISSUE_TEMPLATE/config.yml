@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/Spyced-Concepts/ai-pr-review/discussions
+    about: For questions, ideas, and general discussion — use Discussions rather than Issues.
+  - name: Security vulnerability
+    url: https://spycedconcepts.co.uk/contact
+    about: Please report security vulnerabilities via our contact form, not as a public issue.

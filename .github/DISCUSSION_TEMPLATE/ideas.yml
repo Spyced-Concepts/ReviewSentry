@@ -1,0 +1,23 @@
+title: "[Idea] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea for ReviewSentry? Share it here. Ideas don't need to be fully formed — half-baked thoughts are welcome too.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What are you thinking?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What problem or workflow prompted this? Knowing the context helps us assess fit.
+    validations:
+      required: false
