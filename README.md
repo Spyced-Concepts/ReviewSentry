@@ -108,7 +108,7 @@ jobs:
       # models: read   # add this line if using github-models
     steps:
       - uses: actions/checkout@v4
-      - uses: Spyced-Concepts/ai-pr-review@v1
+      - uses: Spyced-Concepts/ai-pr-review@v0
         with:
           ai_api_key:   ${{ secrets.YOUR_API_KEY }}
           ai_model:     your-model-identifier
@@ -121,6 +121,15 @@ jobs:
 
 See the [setup guides](docs/) for provider-specific instructions and model lists.
 
+### Version pinning
+
+| Reference | Behaviour |
+|---|---|
+| `@v0` | Floating tag — always points to the latest v0.x release. Recommended for most users. |
+| `@v0.2.2-alpha` | Pinned to a specific release. Use this if you need a reproducible, stable reference. |
+
+`@v1` will be created when the first stable v1.0.0 is released. Until then, use `@v0`.
+
 ---
 
 ## Inputs
@@ -129,7 +138,7 @@ See the [setup guides](docs/) for provider-specific instructions and model lists
 |---|---|---|---|
 | `ai_api_key` | ✓ | — | AI provider API key. Use `${{ secrets.GITHUB_TOKEN }}` for GitHub Models. |
 | `ai_model` | ✓ | — | Model identifier — see provider setup guide |
-| `ai_provider` | | `anthropic` | Adapter: `anthropic`, `openai`, or `gemini` |
+| `ai_provider` | ✓ | — | Adapter: `anthropic`, `openai`, `gemini`, or `github-models` |
 | `ai_base_url` | | `""` | Base URL override for OpenAI-compatible endpoints (GitHub Models, Groq, Azure, Ollama) |
 | `pr_number` | ✓ | — | Pull request number |
 | `pr_title` | ✓ | — | Pull request title |
