@@ -6,7 +6,7 @@ body:
       value: |
         Need help setting up ReviewSentry with a specific provider, or got a setup tip to share? This is the place.
 
-        Before posting, check the [setup guides](https://github.com/Spyced-Concepts/ai-pr-review/tree/main/docs) — your question may already be answered there.
+        Before posting, check the [setup guides](https://github.com/Spyced-Concepts/ReviewSentry/tree/main/docs) — your question may already be answered there.
 
   - type: dropdown
     id: provider

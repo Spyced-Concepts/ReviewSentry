@@ -37,7 +37,7 @@ The OpenAI adapter works with any provider that implements the OpenAI Chat Compl
 ### 4. Workflow file
 
 ```yaml
-- uses: Spyced-Concepts/ai-pr-review@v1
+- uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.2-beta
   with:
     ai_api_key:   ${{ secrets.AI_API_KEY }}
     ai_model:     ${{ vars.AI_MODEL }}
@@ -55,7 +55,7 @@ The OpenAI adapter works with any provider that implements the OpenAI Chat Compl
 Use the OpenAI adapter with a custom base URL:
 
 ```yaml
-- uses: Spyced-Concepts/ai-pr-review@v1
+- uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.2-beta
   with:
     ai_api_key:   ${{ secrets.AI_API_KEY }}   # your Groq API key
     ai_model:     llama-3.3-70b-versatile
@@ -74,7 +74,7 @@ Get a Groq API key at [console.groq.com](https://console.groq.com).
 ## Azure OpenAI
 
 ```yaml
-- uses: Spyced-Concepts/ai-pr-review@v1
+- uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.2-beta
   with:
     ai_api_key:   ${{ secrets.AI_API_KEY }}   # Azure OpenAI key
     ai_model:     your-deployment-name
@@ -93,7 +93,7 @@ Get a Groq API key at [console.groq.com](https://console.groq.com).
 For self-hosted Ollama accessible from your runner:
 
 ```yaml
-- uses: Spyced-Concepts/ai-pr-review@v1
+- uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.2-beta
   with:
     ai_api_key:   ollama          # Ollama ignores the key; any value works
     ai_model:     qwen2.5-coder

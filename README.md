@@ -8,13 +8,13 @@ No dashboards. No per-review billing. No vendor lock-in. MIT licensed.
 
 ---
 
-## Why ai-pr-review
+## Why ReviewSentry
 
 Most AI code review tools focus on code quality. This one leads with **security**.
 
 Every review starts with a sensitive data disclosure scan — catching credentials, personal identifiers, private paths, and computer names before they reach your commit history. This criterion runs first, always, before any other finding is reported.
 
-| | ai-pr-review | Typical AI review action |
+| | ReviewSentry | Typical AI review action |
 |---|---|---|
 | Sensitive data scan | ✅ First criterion, always | ✗ Not included |
 | Free with existing GitHub account | ✅ GitHub Models | ✗ Requires paid AI subscription |
@@ -108,7 +108,7 @@ jobs:
       # models: read   # add this line if using github-models
     steps:
       - uses: actions/checkout@v4
-      - uses: Spyced-Concepts/ai-pr-review@v0
+      - uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.2-beta
         with:
           ai_api_key:   ${{ secrets.YOUR_API_KEY }}
           ai_model:     your-model-identifier
@@ -121,14 +121,20 @@ jobs:
 
 See the [setup guides](docs/) for provider-specific instructions and model lists.
 
-### Version pinning
+### Version pinning — SHA only
 
-| Reference | Behaviour |
-|---|---|
-| `@v0` | Floating tag — always points to the latest v0.x release. Recommended for most users. |
-| `@v0.2.2-alpha` | Pinned to a specific release. Use this if you need a reproducible, stable reference. |
+**SHA pinning is the only supported pattern.** Tags are mutable; floating tags (`@v0`, `@v1`) and version tags (`@v0.3.2-beta`) can all be rewritten by the maintainer or anyone who gains access to the repository, and consumers' next workflow run would silently execute the new code with their secrets. Pinning to a full commit SHA gives cryptographic immutability — the exact code you reviewed is the exact code that will run.
 
-`@v1` will be created when the first stable v1.0.0 is released. Until then, use `@v0`.
+```yaml
+# Recommended (the only supported pattern)
+- uses: Spyced-Concepts/ReviewSentry@<full-40-char-sha>  # v0.3.2-beta
+```
+
+The trailing version comment is human metadata and is read by Dependabot, which can open auto-update PRs when newer releases ship.
+
+Find the SHA for any release on the [Releases page](https://github.com/Spyced-Concepts/ReviewSentry/releases) — click the release and copy the full commit SHA, then update your workflow.
+
+The `@v0` floating tag was removed on 2026-05-14. See the [CHANGELOG](CHANGELOG.md).
 
 ---
 

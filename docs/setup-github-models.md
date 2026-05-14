@@ -47,7 +47,7 @@ jobs:
       models: read          # required for GitHub Models access
     steps:
       - uses: actions/checkout@v4
-      - uses: Spyced-Concepts/ai-pr-review@v1
+      - uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.2-beta
         with:
           ai_api_key:   ${{ secrets.GITHUB_TOKEN }}
           ai_model:     gpt-4o

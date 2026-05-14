@@ -1,9 +1,29 @@
 # Changelog
 
-All notable changes to ai-pr-review are documented here.
+All notable changes to ReviewSentry are documented here.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
+Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — applied by *type of change*, not by a fixed release cadence:
+
+- **MAJOR** (`vX.0.0`) — breaking changes
+- **MINOR** (`v0.X.0`) — new features
+- **PATCH** (`v0.X.Y`) — bug fixes, hotfixes, and documentation-only changes
+
+Releases are not scheduled — they ship when there is something to ship.
+
+> **Prior name.** Before 2026-05-09 (v0.2.2-alpha) this project was called `ai-pr-review`. The action's `name:` field has been `ReviewSentry` since v0.2.2-alpha; the GitHub repository slug was renamed to `Spyced-Concepts/ReviewSentry` on 2026-05-14. Historical CHANGELOG entries and UAT records below preserve their original wording.
+
+---
+
+## [0.3.2-beta] — 2026-05-14
+
+### Security
+- **Removed the `@v0` floating tag** to eliminate the supply-chain risk class. Floating tags are mutable — the maintainer (or anyone gaining write access) can rewrite where they point, and consumers' next run silently executes the new code with their secrets. SHA pinning is now the only supported pattern. See `SECURITY.md`.
+
+### Changed
+- **All documentation now recommends SHA pinning with a version comment** (Dependabot-readable). Tag pinning, including version tags, is no longer documented as a supported pattern.
+- **Repository renamed from `ai-pr-review` to `ReviewSentry`** to match the marketplace listing and the action's `name:` field. GitHub Actions does NOT redirect `uses:` references for renamed action repositories (deliberate security policy) — every consumer must update their `uses:` line to the new slug.
+- Documentation, issue/discussion templates, and code docstrings updated to use the current name `ReviewSentry` throughout. Historical CHANGELOG entries and UAT records preserved unchanged.
 
 ---
 

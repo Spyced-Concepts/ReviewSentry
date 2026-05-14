@@ -1,5 +1,5 @@
 """
-Google Gemini adapter for ai-pr-review.
+Google Gemini adapter for ReviewSentry.
 
 Calls the Gemini generateContent API via the REST endpoint.
 Model examples: gemini-2.0-flash, gemini-1.5-pro, gemini-1.5-flash

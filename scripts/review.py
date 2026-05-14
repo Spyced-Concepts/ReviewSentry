@@ -1,5 +1,5 @@
 """
-ai-pr-review — core review script.
+ReviewSentry — core review script.
 
 Provider-agnostic. Reads the PR diff, builds the review prompt, dispatches to
 the configured adapter, and writes the result to GITHUB_OUTPUT.

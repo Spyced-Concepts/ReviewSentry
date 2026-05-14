@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Question or discussion
-    url: https://github.com/Spyced-Concepts/ai-pr-review/discussions
+    url: https://github.com/Spyced-Concepts/ReviewSentry/discussions
     about: For questions, ideas, and general discussion — use Discussions rather than Issues.
   - name: Security vulnerability
     url: https://spycedconcepts.co.uk/contact
