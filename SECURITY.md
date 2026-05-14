@@ -92,19 +92,22 @@ See the **Data Handling Notice** in [LICENSE](LICENSE) for the full terms. Quest
 
 ---
 
-## Pinning the action version
+## Pinning the action version — SHA only
 
-Pin to a release tag rather than `@main` to protect your pipeline from unexpected changes:
+**SHA pinning is the only supported pattern.** Tags are mutable; the maintainer (or anyone who gains access to the repository) can rewrite where a tag points, and consumers' next workflow run would silently execute the new code with their secrets. The widely-publicised `tj-actions/changed-files` compromise (March 2025) is the canonical example of this failure mode. Pinning to a full commit SHA gives cryptographic immutability — the exact code you reviewed is the exact code that will run.
 
 ```yaml
-# Recommended
-- uses: Spyced-Concepts/ai-pr-review@v1
+# Recommended — pin to a full commit SHA; the comment is human metadata read by Dependabot
+- uses: Spyced-Concepts/ReviewSentry@<full-40-char-sha>  # v0.3.2-beta
 
-# Maximum supply-chain security — pin to a specific commit SHA
-- uses: Spyced-Concepts/ai-pr-review@<commit-sha>
-
-# Not recommended — tracks moving HEAD
-- uses: Spyced-Concepts/ai-pr-review@main
+# Not recommended — any floating or mutable reference
+- uses: Spyced-Concepts/ReviewSentry@v0           # floating major-version tag
+- uses: Spyced-Concepts/ReviewSentry@v0.3.2-beta  # version tag (still mutable on the producer side)
+- uses: Spyced-Concepts/ReviewSentry@main         # tracks moving HEAD
 ```
 
-Check the [releases page](https://github.com/Spyced-Concepts/ai-pr-review/releases) for the latest stable version.
+The `@v0` floating tag was removed on 2026-05-14 to remove the supply-chain risk class entirely. Anyone still referencing `@v0` should switch to a pinned SHA; their workflow will fail with `repository not found / ref not found` until they do.
+
+**Finding the SHA:** Open the [Releases page](https://github.com/Spyced-Concepts/ReviewSentry/releases), click the release, and copy the full commit SHA. Paste the SHA into your `uses:` line and the version label into the trailing comment.
+
+**Auto-updates with Dependabot:** Add the action to your `.github/dependabot.yml`. Dependabot reads the trailing version comment, compares against the latest release on this repo, and opens a PR updating both the SHA and the comment when a newer release ships. You review the PR like any other.

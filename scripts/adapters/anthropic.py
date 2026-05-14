@@ -1,5 +1,5 @@
 """
-Anthropic adapter for ai-pr-review.
+Anthropic adapter for ReviewSentry.
 
 Calls the Anthropic Messages API with prompt caching enabled.
 Model examples: claude-sonnet-4-6, claude-opus-4-7, claude-haiku-4-5-20251001

@@ -54,7 +54,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: Spyced-Concepts/ai-pr-review@v1
+      - uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.2-beta
         with:
           ai_api_key:   ${{ secrets.AI_API_KEY }}
           ai_model:     ${{ vars.AI_MODEL }}

@@ -1,5 +1,5 @@
 """
-OpenAI adapter for ai-pr-review.
+OpenAI adapter for ReviewSentry.
 
 Calls the OpenAI Chat Completions API. Also works with any OpenAI-compatible
 endpoint — set AI_BASE_URL to use Groq, Azure OpenAI, Mistral, Ollama, or

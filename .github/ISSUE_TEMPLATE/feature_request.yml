@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Feature requests are welcome. Please check [open issues](https://github.com/Spyced-Concepts/ai-pr-review/issues) first — your idea may already be tracked.
+        Feature requests are welcome. Please check [open issues](https://github.com/Spyced-Concepts/ReviewSentry/issues) first — your idea may already be tracked.
 
   - type: textarea
     id: problem

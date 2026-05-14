@@ -1,5 +1,5 @@
 """
-GitHub Models adapter for ai-pr-review.
+GitHub Models adapter for ReviewSentry.
 
 Uses your existing GITHUB_TOKEN — no additional account or API key required.
 Free within GitHub's rate limits.
