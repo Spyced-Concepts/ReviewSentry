@@ -43,6 +43,18 @@ not undetected bugs. Each entry links to the tracking issue where applicable.
 
 **What to do:** The test suite works correctly with the pinned version. No action required. Research into upgrading is tracked in [issue #81](https://github.com/Spyced-Concepts/ReviewSentry/issues/81).
 
+## KI-004 — Review does not re-run when a draft PR is marked ready for review
+
+**Affects:** Teams using the `ready_for_review` event to trigger a final review before merge.
+
+**What you see:** Converting a pull request from draft to ready for review does not trigger a new ReviewSentry run. The `ready_for_review` GitHub event is not currently included in the workflow trigger.
+
+**Why it happens:** The default `ai-review.yml` workflow triggers on `opened`, `synchronize`, and `reopened`. The `ready_for_review` event (fired when a draft PR is marked ready) is a distinct event type and is not included.
+
+**What to do:** Push a trivial commit to the PR branch after marking it ready for review. This fires the `synchronize` event and triggers a fresh review. Alternatively, close and re-open the PR — this fires `reopened`.
+
+**Planned:** A future release will add a `review_on_ready` input so teams can opt in to automatic re-review on the `ready_for_review` event.
+
 ---
 
 *If you encounter a problem not listed here, please [open an issue](https://github.com/Spyced-Concepts/ReviewSentry/issues).*
