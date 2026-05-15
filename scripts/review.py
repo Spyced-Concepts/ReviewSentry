@@ -169,11 +169,13 @@ USER = (
     "or \U0001f7e1 (Moderate/Low) based on severity.\n"
     + ("- Omit criterion sections where no issues were found — show only ⚠️ sections.\n"
        if not SHOW_PASSING else "")
-    + "\nClose your review with exactly one of the following verdict lines — include the emoji and bold text exactly as shown:\n\n"
+    + "\nAfter completing your full review of all criteria, end your response with exactly one of the following verdict lines. "
+    "The verdict must be the absolute last line — do not add any text, summary, or commentary after it. "
+    "Placing the verdict last encourages the reader to engage with the full review before seeing the outcome.\n\n"
     "✅ **AI Recommendation: APPROVE**\n"
     "📝 **AI Recommendation: APPROVE WITH NOTES**\n"
     "❌ **AI Recommendation: REQUEST CHANGES**\n\n"
-    "The verdict is your advisory recommendation only. The final merge decision rests with the human maintainer."
+    "Include the emoji and bold text exactly as shown. This is an advisory recommendation only — the final merge decision rests with the human maintainer."
 )
 
 # ── Dispatch to adapter ───────────────────────────────────────────────────────
