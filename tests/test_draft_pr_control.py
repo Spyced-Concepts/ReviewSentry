@@ -83,8 +83,8 @@ def readme_examined():
 
 # ── When steps — live env required ───────────────────────────────────────────
 
-@when("the pull request workflow triggers on the reopened event")
-def workflow_triggers_reopened(live_env):
+@when("the pull request workflow triggers on the ready_for_review event")
+def workflow_triggers_ready_for_review(live_env):
     pass
 
 
