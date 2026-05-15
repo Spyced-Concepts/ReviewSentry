@@ -242,8 +242,9 @@ runs:
           *) echo "::warning::fail_on has unrecognised value '${FAIL_ON}' — accepted values: never, request_changes — defaulting to never"
              FAIL_ON="never" ;;
         esac
-        # Extraction failure always exits 1 — regardless of fail_on value.
-        # fail_on only controls whether a valid REQUEST CHANGES verdict fails the workflow.
+        # Extraction failure always exits 0 with a warning — an incomplete review is not
+        # a signal that code should not be merged. fail_on only controls whether a valid
+        # REQUEST CHANGES verdict fails the workflow.
         #
         # The grep pattern matches the bold verdict format specified in scripts/review.py.
         # Alternation order is intentional: longer strings must precede shorter ones so

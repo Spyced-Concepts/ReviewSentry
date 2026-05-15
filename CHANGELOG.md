@@ -15,6 +15,34 @@ Releases are not scheduled — they ship when there is something to ship.
 
 ---
 
+## [0.3.3-beta] — 2026-05-15
+
+### Added
+- **`fail_on` input** — set to `request_changes` to exit non-zero when the AI verdict is REQUEST CHANGES, enabling merge blocking via required status checks. Default `never`.
+- **`verdict` output** — exposes the AI verdict as an action output for downstream workflow steps.
+- **`show_passing_criteria` input** — set to `false` to show only criteria with findings, keeping reviews concise on large PRs. Default `true`.
+- **`review_drafts` input** — set to `false` to skip review on draft PRs. Default `true` (current behaviour unchanged).
+- **`system_context` input** — optional project-specific context appended to the AI system prompt.
+- **Extensible criteria configuration** via `.github/reviewsentry.yml` — disable optional criteria, add custom criteria, and (with explicit acknowledgement) disable core criteria per-repo.
+- **Advisory verdict format** — verdict line includes emoji and `AI Recommendation:` prefix; always the absolute last line of the review.
+- **Colour indicators** — 🔴/🟠/🟡 per finding severity; ✅/⚠️ per criterion section header.
+- **Self-review CI** — ReviewSentry now reviews its own pull requests via GitHub Models at zero external cost.
+- **BDD test suite** — `features/` Gherkin feature files and `tests/` pytest-bdd step definitions; 19 scenarios pass locally, e2e scenarios run in CI.
+- **KNOWN_ISSUES.md** — documents four user-facing limitations with workarounds.
+- **Recommended workflow** in README — six-step guide: draft → address findings → ready for review → confirm checks → peer review → merge.
+
+### Fixed
+- `gh pr diff` and `gh pr comment` missing `--repo` flag causing failures when running without a checkout step.
+- False-positive model name validation in reviews — model identifiers are now treated as opaque strings per the system prompt.
+- Prompt injection hardening — `pr_title` and `pr_body` documented as untrusted and passed via environment variables only.
+- Verdict extraction robust against token-limit truncation — optional closing `**`; extraction failure emits `::warning::` and exits 0 rather than failing the check.
+
+### Changed
+- Review footer updated to make advisory nature explicit: *AI-generated advisory review. All verdicts are recommendations only — the final merge decision rests with the human maintainer.*
+- `docs/uat/` removed — UAT coverage replaced by BDD feature files in `features/`.
+
+---
+
 ## [0.3.2-beta] — 2026-05-14
 
 ### Security
