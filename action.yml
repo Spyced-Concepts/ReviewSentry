@@ -62,11 +62,21 @@ inputs:
   github_token:
     description: GitHub token for posting the review comment.
     required: true
+  fail_on:
+    description: >
+      When to fail the workflow based on the AI verdict.
+      Options: never (default) — informational only, no CI failure;
+      request_changes — exit non-zero when the AI verdict is REQUEST CHANGES.
+    required: false
+    default: "never"
 
 outputs:
   review:
     description: The full review text posted as a PR comment.
     value: ${{ steps.review.outputs.review }}
+  verdict:
+    description: The AI verdict — APPROVE, APPROVE WITH NOTES, or REQUEST CHANGES.
+    value: ${{ steps.verdict.outputs.verdict }}
 
 runs:
   using: composite
@@ -126,3 +136,17 @@ runs:
           echo "*Automated review. Maintainer approval required.*"
         } > "$RUNNER_TEMP/review_body.md"
         gh pr comment "${{ inputs.pr_number }}" --body-file "$RUNNER_TEMP/review_body.md"
+
+    - name: Check verdict
+      id: verdict
+      shell: bash
+      env:
+        REVIEW:  ${{ steps.review.outputs.review }}
+        FAIL_ON: ${{ inputs.fail_on }}
+      run: |
+        VERDICT=$(printf '%s' "$REVIEW" | awk 'NF{last=$0} END{print last}')
+        echo "verdict=${VERDICT}" >> "$GITHUB_OUTPUT"
+        if [ "$FAIL_ON" = "request_changes" ] && [ "$VERDICT" = "REQUEST CHANGES" ]; then
+          echo "::error::AI verdict: REQUEST CHANGES — failing workflow (fail_on=request_changes)"
+          exit 1
+        fi
