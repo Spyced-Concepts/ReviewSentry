@@ -27,6 +27,9 @@ API_KEY   = os.environ.get("AI_API_KEY", "")
 MODEL     = os.environ.get("AI_MODEL", "")
 PROVIDER  = os.environ.get("AI_PROVIDER", "").strip().lower()
 BASE_URL  = os.environ.get("AI_BASE_URL", "").strip()
+# PR_TITLE and PR_BODY come from the PR author and are untrusted. They are read
+# from environment variables (set by action.yml) and used only as Python string
+# values — never passed to a shell command or interpolated unsafely.
 PR_TITLE  = os.environ.get("PR_TITLE", "")
 PR_BODY   = os.environ.get("PR_BODY", "")
 PR_NUM    = os.environ.get("PR_NUMBER", "")
