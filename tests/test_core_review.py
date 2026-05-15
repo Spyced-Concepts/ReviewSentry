@@ -20,7 +20,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ── Given steps (live or local) ───────────────────────────────────────────────
 
 @given("the test repository has an open pull request with a non-empty diff")
-def open_pr_with_diff(live_env):
+def open_pr_with_diff():
     pass
 
 

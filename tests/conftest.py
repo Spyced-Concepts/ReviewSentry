@@ -43,6 +43,12 @@ def live_env():
 
 
 @pytest.fixture
+def result_state():
+    """Shared state for capturing subprocess results across step definitions."""
+    return {"result": None}
+
+
+@pytest.fixture
 def temp_runner(tmp_path):
     """Provides a RUNNER_TEMP directory with a minimal diff file and GITHUB_OUTPUT."""
     diff_file = tmp_path / "pr_diff.txt"
