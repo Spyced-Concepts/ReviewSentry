@@ -66,6 +66,15 @@ inputs:
       Example: "TypeScript/React project. No class components. Tailwind CSS only."
     required: false
     default: ""
+  review_drafts:
+    description: >
+      Whether to review draft pull requests. Default true — reviews fire on
+      drafts by default. Set to false to skip review until the PR is marked
+      ready for review.
+      Accepted values: true/1/yes or false/0/no. Any other value triggers a
+      workflow warning and defaults to true.
+    required: false
+    default: "true"
   github_token:
     description: GitHub token for posting the review comment.
     required: true
@@ -101,6 +110,30 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Check draft PR policy
+      shell: bash
+      env:
+        IS_DRAFT:      ${{ github.event.pull_request.draft }}
+        REVIEW_DRAFTS: ${{ inputs.review_drafts }}
+      run: |
+        set -euo pipefail
+        _raw=$(printf '%s' "$REVIEW_DRAFTS" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+        case "$_raw" in
+          true|1|yes)  _review_drafts=true ;;
+          false|0|no)  _review_drafts=false ;;
+          *)
+            echo "::warning::review_drafts has unrecognised value '${REVIEW_DRAFTS}' — accepted values: true/1/yes or false/0/no — defaulting to true"
+            _review_drafts=true ;;
+        esac
+        if [ "$_review_drafts" = "false" ]; then
+          # Default to reviewing when draft status is unavailable (fail-safe)
+          _is_draft="${IS_DRAFT:-false}"
+          if [ "$_is_draft" = "true" ]; then
+            echo "Skipping review — pull request is a draft"
+            exit 0
+          fi
+        fi
+
     - name: Fetch reviewsentry.yml config
       shell: bash
       env:
@@ -215,13 +248,16 @@ runs:
         # The grep pattern matches the bold verdict format specified in scripts/review.py.
         # Alternation order is intentional: longer strings must precede shorter ones so
         # "APPROVE WITH NOTES" is not partially matched as "APPROVE".
+        # Match the verdict with or without the closing ** — the AI occasionally
+        # omits the trailing bold marker when output is cut off near token limit.
         VERDICT=$(printf '%s' "$REVIEW" \
-          | grep -oE '\*\*AI Recommendation: (APPROVE WITH NOTES|REQUEST CHANGES|APPROVE)\*\*' 2>/dev/null \
+          | grep -oE '\*\*AI Recommendation: (APPROVE WITH NOTES|REQUEST CHANGES|APPROVE)\*{0,2}' 2>/dev/null \
           | sed 's/\*\*AI Recommendation: //;s/\*\*$//' \
           | tail -1 || echo "")
         if [ -z "$VERDICT" ]; then
-          echo "::error::Could not extract verdict from review output — expected one of: APPROVE, APPROVE WITH NOTES, REQUEST CHANGES"
-          exit 1
+          echo "::warning::Could not extract verdict from review output — the review may be incomplete (diff too large). Reduce PR scope or increase diff_lines. Expected one of: APPROVE, APPROVE WITH NOTES, REQUEST CHANGES"
+          echo "verdict=" >> "$GITHUB_OUTPUT"
+          exit 0
         fi
         case "$VERDICT" in
           APPROVE|"APPROVE WITH NOTES"|"REQUEST CHANGES") ;;

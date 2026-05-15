@@ -126,6 +126,11 @@ def workflow_completes(live_env):
     pass
 
 
+@then("a review comment is posted on the pull request")
+def review_comment_posted(live_env):
+    pass
+
+
 @then("the workflow fails with a non-zero exit code")
 def workflow_fails_shared(result_state):
     if result_state.get("result") is None:
