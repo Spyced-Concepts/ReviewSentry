@@ -209,7 +209,10 @@ runs:
           *) echo "::warning::fail_on has unrecognised value '${FAIL_ON}' — accepted values: never, request_changes — defaulting to never"
              FAIL_ON="never" ;;
         esac
-        VERDICT=$(printf '%s' "$REVIEW" | grep -oE 'APPROVE WITH NOTES|REQUEST CHANGES|APPROVE' | tail -1 || true)
+        VERDICT=$(printf '%s' "$REVIEW" \
+          | grep -oE '\*\*AI Recommendation: (APPROVE WITH NOTES|REQUEST CHANGES|APPROVE)\*\*' \
+          | sed 's/\*\*AI Recommendation: //;s/\*\*$//' \
+          | tail -1 || true)
         if [ -z "$VERDICT" ]; then
           echo "::error::Could not extract verdict from review output — expected one of: APPROVE, APPROVE WITH NOTES, REQUEST CHANGES"
           exit 1
