@@ -155,6 +155,7 @@ The `@v0` floating tag was removed on 2026-05-14. See the [CHANGELOG](CHANGELOG.
 | `diff_lines` | | `1500` | Max diff lines to send for review. If the diff exceeds this limit it is truncated and the review comment includes a visible warning: `> Diff was large — review based on first N lines only.` The action never fails due to diff size — it always posts a review, with the truncation note prepended when applicable. Reduce this value if you hit AI provider token limits; increase it for large refactors. |
 | `review_criteria` | | `""` | Additional review criteria, one per line |
 | `custom_rules` | | `""` | Custom sensitive data scan patterns, one per line |
+| `fail_on` | | `never` | Default: `never`. When to fail the workflow based on the AI verdict. Set to `request_changes` to exit non-zero when the verdict is REQUEST CHANGES, blocking PR merges via required status checks. Accepted values: `never`, `request_changes`. Any other value triggers a workflow warning and defaults to `never`. |
 | `github_token` | ✓ | — | GitHub token for posting the review comment |
 
 ## Outputs
@@ -162,6 +163,7 @@ The `@v0` floating tag was removed on 2026-05-14. See the [CHANGELOG](CHANGELOG.
 | Output | Description |
 |---|---|
 | `review` | The full review text posted as a PR comment |
+| `verdict` | The AI verdict — one of `APPROVE`, `APPROVE WITH NOTES`, or `REQUEST CHANGES`. Empty string if the verdict could not be extracted (workflow warning emitted). |
 
 ---
 
