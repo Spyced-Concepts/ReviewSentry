@@ -38,16 +38,19 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: reviewsentry-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   review:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pull-requests: write
-      contents: read
       models: read          # required for GitHub Models access
     steps:
-      - uses: actions/checkout@v4
-      - uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.2-beta
+      - uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.3-beta
         with:
           ai_api_key:   ${{ secrets.GITHUB_TOKEN }}
           ai_model:     gpt-4o

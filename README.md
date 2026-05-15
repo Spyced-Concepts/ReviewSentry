@@ -49,7 +49,7 @@ Every review starts with a sensitive data disclosure scan — catching credentia
 | Gemini | `gemini` | `${{ secrets.AI_API_KEY }}` | e.g. `gemini-2.0-flash` | not needed | standard |
 | Ollama | `openai` | any value | e.g. `qwen2.5-coder` | your Ollama host | standard |
 
-> **Standard permissions:** `pull-requests: write` and `contents: read`. GitHub Models additionally requires `models: read`.
+> **Standard permissions:** `pull-requests: write`. GitHub Models additionally requires `models: read`.
 >
 > **Secret and variable names are yours to choose.** The names `AI_API_KEY` and `AI_MODEL` used throughout this documentation are examples only. Store your key under any name you like and reference it with `${{ secrets.YOUR_CHOSEN_NAME }}`. The action only reads what you pass to its inputs — it has no dependency on specific environment variable names.
 
@@ -99,16 +99,19 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: reviewsentry-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   review:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pull-requests: write
-      contents: read
       # models: read   # add this line if using github-models
     steps:
-      - uses: actions/checkout@v4
-      - uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.2-beta
+      - uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.3-beta
         with:
           ai_api_key:   ${{ secrets.YOUR_API_KEY }}
           ai_model:     your-model-identifier
@@ -123,11 +126,11 @@ See the [setup guides](docs/) for provider-specific instructions and model lists
 
 ### Version pinning — SHA only
 
-**SHA pinning is the only supported pattern.** Tags are mutable; floating tags (`@v0`, `@v1`) and version tags (`@v0.3.2-beta`) can all be rewritten by the maintainer or anyone who gains access to the repository, and consumers' next workflow run would silently execute the new code with their secrets. Pinning to a full commit SHA gives cryptographic immutability — the exact code you reviewed is the exact code that will run.
+**SHA pinning is the only supported pattern.** Tags are mutable; floating tags (`@v0`, `@v1`) and version tags (`@v0.3.3-beta`) can all be rewritten by the maintainer or anyone who gains access to the repository, and consumers' next workflow run would silently execute the new code with their secrets. Pinning to a full commit SHA gives cryptographic immutability — the exact code you reviewed is the exact code that will run.
 
 ```yaml
 # Recommended (the only supported pattern)
-- uses: Spyced-Concepts/ReviewSentry@<full-40-char-sha>  # v0.3.2-beta
+- uses: Spyced-Concepts/ReviewSentry@<full-40-char-sha>  # v0.3.3-beta
 ```
 
 The trailing version comment is human metadata and is read by Dependabot, which can open auto-update PRs when newer releases ship.
