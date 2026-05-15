@@ -1,5 +1,5 @@
 # ReviewSentry reviews its own pull requests.
-# Uses GitHub Models (GITHUB_TOKEN) — zero cost, no extra secrets required.
+# Uses Anthropic Claude Haiku — fast and cost-efficient for self-review.
 # References functional-test directly — always uses the current stable version.
 # No manual pin updates needed. SHA pinning is for third-party consumers
 # protecting against supply chain attacks; not applicable for a repo
@@ -21,13 +21,12 @@ jobs:
     timeout-minutes: 10
     permissions:
       pull-requests: write
-      models: read
     steps:
       - uses: Spyced-Concepts/ReviewSentry@functional-test
         with:
-          ai_api_key:   ${{ secrets.GITHUB_TOKEN }}
-          ai_model:     gpt-4o
-          ai_provider:  github-models
+          ai_api_key:   ${{ secrets.AI_API_KEY }}
+          ai_model:     claude-haiku-4-5-20251001
+          ai_provider:  anthropic
           pr_number:    ${{ github.event.pull_request.number }}
           pr_title:     ${{ github.event.pull_request.title }}
           pr_body:      ${{ github.event.pull_request.body }}
