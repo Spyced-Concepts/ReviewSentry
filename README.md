@@ -169,6 +169,38 @@ The `@v0` floating tag was removed on 2026-05-14. See the [CHANGELOG](CHANGELOG.
 
 ---
 
+## Recommended workflow
+
+ReviewSentry works best when it acts as a first-pass reviewer that your team builds on, not a gate that replaces human judgement.
+
+**1. Open your PR as a draft**
+
+Raise the pull request as a draft. ReviewSentry reviews it immediately — any issues flagged before a human even looks at it.
+
+**2. Address the review findings**
+
+For each finding in the AI review comment:
+- **Fix it** — commit the fix to the same branch; ReviewSentry re-reviews automatically.
+- **Explain it** — if the finding is a false positive or an intentional choice, leave a short comment on the PR explaining why. This creates a record for the human reviewer.
+
+**3. Mark the PR ready for review**
+
+Once you are satisfied with the AI review findings, mark the PR ready for review. Push a final trivial commit if you want to trigger one last ReviewSentry run at this point (see [KI-004](KNOWN_ISSUES.md#ki-004) — the ready-for-review event does not currently re-trigger the check automatically).
+
+**4. Confirm all checks are green**
+
+Check that all required status checks pass and that the AI review verdict is `APPROVE` or `APPROVE WITH NOTES`. A verdict of `REQUEST CHANGES` with unresolved findings warrants a second look before requesting a human reviewer.
+
+**5. Request a peer review**
+
+Assign a human reviewer. Share the AI review comment as context — it gives the reviewer a structured starting point and surfaces any issues you've already addressed or explained.
+
+**6. Merge**
+
+The human reviewer merges when they are satisfied with both the code and the AI review. The AI verdict is advisory — the final merge decision always rests with the human maintainer.
+
+---
+
 ## Review criteria
 
 Every review checks these criteria in order:
