@@ -59,6 +59,13 @@ inputs:
       product names, or internal identifiers.
     required: false
     default: ""
+  system_context:
+    description: >
+      Optional project-specific context appended to the AI system prompt.
+      Use to tell the reviewer about your stack, conventions, or constraints.
+      Example: "TypeScript/React project. No class components. Tailwind CSS only."
+    required: false
+    default: ""
   github_token:
     description: GitHub token for posting the review comment.
     required: true
@@ -71,6 +78,43 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Fetch reviewsentry.yml config
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        REPO:     ${{ github.repository }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        GH_ERR=$(mktemp)
+        ENCODED=$(gh api "repos/$REPO/contents/.github/reviewsentry.yml?ref=$HEAD_SHA" \
+          --jq '.content' 2>"$GH_ERR" || true)
+        if [ -n "$ENCODED" ]; then
+          B64_ERR=$(mktemp)
+          CONFIG=$(printf '%s' "$ENCODED" | base64 -d 2>"$B64_ERR" || true)
+          if [ -s "$B64_ERR" ]; then
+            echo "::warning::Failed to decode .github/reviewsentry.yml content: $(cat "$B64_ERR") — using defaults"
+            CONFIG=""
+          fi
+          rm -f "$B64_ERR"
+        else
+          ERR=$(cat "$GH_ERR" 2>/dev/null || true)
+          if echo "$ERR" | grep -qi "not found\|404\|No such file"; then
+            CONFIG=""  # File absent — expected, use defaults silently
+          elif [ -n "$ERR" ]; then
+            echo "::warning::Could not fetch .github/reviewsentry.yml: $ERR — using defaults"
+            CONFIG=""
+          else
+            CONFIG=""
+          fi
+        fi
+        rm -f "$GH_ERR"
+        {
+          echo "REVIEWSENTRY_CONFIG<<RSEOF"
+          printf '%s' "${CONFIG:-}"
+          echo ""
+          echo "RSEOF"
+        } >> "$GITHUB_ENV"
+
     - name: Capture PR diff
       id: diff
       shell: bash
@@ -98,9 +142,11 @@ runs:
         PR_TITLE:         ${{ inputs.pr_title }}
         PR_BODY:          ${{ inputs.pr_body }}
         PR_NUMBER:        ${{ inputs.pr_number }}
-        REVIEW_CRITERIA:  ${{ inputs.review_criteria }}
-        CUSTOM_RULES:     ${{ inputs.custom_rules }}
-        DIFF_LINES_LIMIT: ${{ inputs.diff_lines }}
+        REVIEW_CRITERIA:    ${{ inputs.review_criteria }}
+        CUSTOM_RULES:       ${{ inputs.custom_rules }}
+        DIFF_LINES_LIMIT:   ${{ inputs.diff_lines }}
+        SYSTEM_CONTEXT:     ${{ inputs.system_context }}
+        REVIEWSENTRY_CONFIG: ${{ env.REVIEWSENTRY_CONFIG }}
       run: python3 "${{ github.action_path }}/scripts/review.py"
 
     - name: Post review comment
