@@ -50,6 +50,13 @@ Feature: Draft pull request review control
     Then the workflow completes without error
     And a review comment is posted on the pull request
 
+  Scenario: Closed PR that is reopened is reviewed
+    Given the pull request is not a draft
+    And the pull request was previously closed and has been reopened
+    When the pull request workflow triggers on the reopened event
+    Then the workflow completes without error
+    And a review comment is posted on the pull request
+
   # ── Input validation ────────────────────────────────────────────────────────
 
   Scenario: review_drafts accepts "1" as truthy

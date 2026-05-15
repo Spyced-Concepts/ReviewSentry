@@ -46,6 +46,11 @@ def pr_converted_to_ready(live_env):
     pass
 
 
+@given("the pull request was previously closed and has been reopened")
+def pr_reopened(live_env):
+    pass
+
+
 @given("the pull request draft status is unavailable in the event context")
 def pr_draft_status_unavailable(live_env):
     pass
@@ -85,6 +90,11 @@ def readme_examined():
 
 @when("the pull request workflow triggers on the ready_for_review event")
 def workflow_triggers_ready_for_review(live_env):
+    pass
+
+
+@when("the pull request workflow triggers on the reopened event")
+def workflow_triggers_reopened(live_env):
     pass
 
 
