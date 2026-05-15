@@ -59,6 +59,13 @@ inputs:
       product names, or internal identifiers.
     required: false
     default: ""
+  system_context:
+    description: >
+      Optional project-specific context appended to the AI system prompt.
+      Use to tell the reviewer about your stack, conventions, or constraints.
+      Example: "TypeScript/React project. No class components. Tailwind CSS only."
+    required: false
+    default: ""
   github_token:
     description: GitHub token for posting the review comment.
     required: true
@@ -71,6 +78,22 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Fetch reviewsentry.yml config
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        REPO:     ${{ github.repository }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        CONFIG=$(gh api "repos/$REPO/contents/.github/reviewsentry.yml?ref=$HEAD_SHA" \
+          --jq '.content' 2>/dev/null | base64 -d 2>/dev/null || true)
+        {
+          echo "REVIEWSENTRY_CONFIG<<RSEOF"
+          printf '%s' "${CONFIG:-}"
+          echo ""
+          echo "RSEOF"
+        } >> "$GITHUB_ENV"
+
     - name: Capture PR diff
       id: diff
       shell: bash
@@ -98,9 +121,11 @@ runs:
         PR_TITLE:         ${{ inputs.pr_title }}
         PR_BODY:          ${{ inputs.pr_body }}
         PR_NUMBER:        ${{ inputs.pr_number }}
-        REVIEW_CRITERIA:  ${{ inputs.review_criteria }}
-        CUSTOM_RULES:     ${{ inputs.custom_rules }}
-        DIFF_LINES_LIMIT: ${{ inputs.diff_lines }}
+        REVIEW_CRITERIA:    ${{ inputs.review_criteria }}
+        CUSTOM_RULES:       ${{ inputs.custom_rules }}
+        DIFF_LINES_LIMIT:   ${{ inputs.diff_lines }}
+        SYSTEM_CONTEXT:     ${{ inputs.system_context }}
+        REVIEWSENTRY_CONFIG: ${{ env.REVIEWSENTRY_CONFIG }}
       run: python3 "${{ github.action_path }}/scripts/review.py"
 
     - name: Post review comment
