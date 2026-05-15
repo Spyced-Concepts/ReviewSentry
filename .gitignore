@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Test venv — local only, not committed
+tests/.venv/
+
+# pytest cache
+.pytest_cache/
+tests/.pytest_cache/

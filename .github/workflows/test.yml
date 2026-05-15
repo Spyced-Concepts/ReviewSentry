@@ -64,3 +64,20 @@ jobs:
               sys.exit(1)
           print("All adapters implement call_api() correctly")
           EOF
+
+  unit-tests:
+    name: Unit and integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up test venv
+        run: |
+          python3 -m venv tests/.venv
+          tests/.venv/bin/pip install --quiet --upgrade pip
+          tests/.venv/bin/pip install --quiet -r tests/requirements-dev.txt
+
+      - name: Run test suite
+        run: |
+          cd tests
+          .venv/bin/pytest -v --tb=short
