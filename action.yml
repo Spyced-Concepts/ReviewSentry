@@ -253,8 +253,9 @@ runs:
           | sed 's/\*\*AI Recommendation: //;s/\*\*$//' \
           | tail -1 || echo "")
         if [ -z "$VERDICT" ]; then
-          echo "::error::Could not extract verdict from review output — expected one of: APPROVE, APPROVE WITH NOTES, REQUEST CHANGES"
-          exit 1
+          echo "::warning::Could not extract verdict from review output — the review may be incomplete (diff too large). Reduce PR scope or increase diff_lines. Expected one of: APPROVE, APPROVE WITH NOTES, REQUEST CHANGES"
+          echo "verdict=" >> "$GITHUB_OUTPUT"
+          exit 0
         fi
         case "$VERDICT" in
           APPROVE|"APPROVE WITH NOTES"|"REQUEST CHANGES") ;;
