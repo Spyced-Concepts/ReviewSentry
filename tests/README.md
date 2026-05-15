@@ -64,7 +64,9 @@ All test dependencies have been individually assessed for security, maintenance,
 
 **Assessment date:** 2026-05-15
 **Assessed by:** Spyced Concepts Ltd.
-**No unpatched CVEs were found in any of the versions listed below at the time of this assessment.** CVEs that existed in earlier versions of these packages have been fixed in the pinned versions specified in `requirements-dev.txt`.
+**No unpatched CVEs were found in any of the versions listed below at the time of this assessment (2026-05-15).** CVEs that existed in earlier versions of these packages have been fixed in the pinned versions specified in `requirements-dev.txt`.
+
+The 14 packages listed below are the **complete resolved dependency tree** — both direct dependencies of pytest-bdd and their transitive dependencies — as produced by a clean `pip install pytest-bdd==8.1.0` dry run. Every package that enters the test environment is accounted for here; there are no undocumented transitive packages.
 
 These are **dev/test-only dependencies** — they are never bundled into the distributed action. They exist solely on developer machines and in CI test jobs. Production consumers of ReviewSentry are not exposed to these packages.
 
@@ -233,7 +235,7 @@ These are **dev/test-only dependencies** — they are never bundled into the dis
 | **Repository** | https://github.com/tartley/colorama |
 | **License** | BSD-3-Clause — permissive, compatible with our MIT licence |
 | **CVEs in pinned version** | None known |
-| **Last release** | January 2022 — no 2025 releases; considered feature-complete |
+| **Last release** | January 2022 — no releases since then; the library is considered feature-complete and intentionally stable rather than abandoned |
 | **Note** | A supply-chain typosquatting attack targeted a *different* package name (not colorama itself); pinned version 0.4.6 is unaffected |
 | **Risk** | ⚠️ Medium — dormant release cadence; low blast radius as test-only output formatting |
 | **Permitted because** | No unpatched CVEs; typosquatting was on a different package; test-only dependency with no runtime exposure; BSD licence. Reviewed and accepted with awareness of dormant status. |
