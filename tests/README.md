@@ -102,9 +102,9 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Geo** | Europe / US collective |
 | **Repository** | https://github.com/pytest-dev/pytest |
 | **Licence** | MIT |
-| **CVEs (pinned version)** | None at 2026-05-15. CVE-2025-71176 (tmp dir privilege escalation) affected earlier versions; [fixed in 9.0.3](https://nvd.nist.gov/vuln/detail/CVE-2025-71176) |
+| **CVEs (pinned version)** | None at 2026-05-15 — [CVE-2025-71176](https://nvd.nist.gov/vuln/detail/CVE-2025-71176) (tmp dir privilege escalation, fixed in 9.0.3) does not affect this version |
 | **Maintenance status** | Active — 9.0.3 released April 2026 |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — industry-standard test runner, actively maintained, no unpatched CVEs |
 | **Permitted because** | Industry-standard test runner under transparent community governance; no unpatched CVEs in pinned version; MIT licence |
 
 ---
@@ -120,7 +120,7 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Licence** | MIT |
 | **CVEs (pinned version)** | None at 2026-05-15 |
 | **Maintenance status** | Active — 8.1.0 released December 2025 |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — EU-based maintainer, pytest-dev org, no CVEs |
 | **Permitted because** | Active EU-based maintainer under pytest-dev org; no CVEs; MIT licence; enables direct use of Gherkin feature files as executable test specs |
 
 ---
@@ -136,7 +136,7 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Licence** | Apache-2.0 |
 | **CVEs (pinned version)** | None at 2026-05-15 |
 | **Maintenance status** | Active — version 29.0.0 is the version required by pytest-bdd 8.1.0; pinned by the framework dependency, not directly by us. Current Gherkin is at 39.x |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — official Gherkin spec parser, Apache-2.0 licence, no CVEs |
 | **Permitted because** | Official Gherkin specification parser from the spec owners; Apache-2.0 licence; version pinned by pytest-bdd requirement |
 
 ---
@@ -150,9 +150,9 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Geo** | US |
 | **Repository** | https://github.com/sqlalchemy/mako |
 | **Licence** | MIT |
-| **CVEs (pinned version)** | None at 2026-05-15. CVE-2022-40023 (ReDoS) affected versions before 1.2.2; [fixed in 1.2.2](https://nvd.nist.gov/vuln/detail/CVE-2022-40023). Pinned version 1.3.12 is not affected |
+| **CVEs (pinned version)** | None at 2026-05-15 — [CVE-2022-40023](https://nvd.nist.gov/vuln/detail/CVE-2022-40023) (ReDoS, fixed in 1.2.2) does not affect this version |
 | **Maintenance status** | Active — 1.3.12 released December 2024 |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — trusted Python ecosystem author, no unpatched CVEs |
 | **Permitted because** | Well-maintained by a trusted Python ecosystem author; no unpatched CVEs in pinned version; MIT licence |
 
 ---
@@ -168,7 +168,7 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Licence** | BSD-3-Clause |
 | **CVEs (pinned version)** | None at 2026-05-15 |
 | **Maintenance status** | Active — 3.0.3 released September 2025 |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — Pallets project, widely trusted, no CVEs |
 | **Permitted because** | Pallets is a highly trusted Python web ecosystem org; no CVEs; BSD-3-Clause licence |
 
 ---
@@ -184,7 +184,7 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Licence** | MIT |
 | **CVEs (pinned version)** | None at 2026-05-15 |
 | **Maintenance status** | Stable — 1.22.0 is current; low commit frequency consistent with a mature, feature-complete library |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — stable, low-complexity library, no CVEs |
 | **Permitted because** | No CVEs; MIT licence; low complexity reduces attack surface; test-only with no runtime exposure |
 
 ---
@@ -200,7 +200,7 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Licence** | BSD-2-Clause |
 | **CVEs (pinned version)** | None at 2026-05-15 |
 | **Maintenance status** | Active — 0.6.6 released August 2025 |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — active pytest-bdd ecosystem package, no CVEs |
 | **Permitted because** | Active maintenance; no CVEs; BSD-2-Clause licence |
 
 ---
@@ -216,7 +216,7 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Licence** | MIT |
 | **CVEs (pinned version)** | None at 2026-05-15 |
 | **Maintenance status** | Active — 2.3.0 released October 2025 |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — minimal pytest-dev library, no CVEs |
 | **Permitted because** | pytest-dev org; minimal, well-audited library; no CVEs; MIT licence |
 
 ---
@@ -232,7 +232,7 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Licence** | MIT |
 | **CVEs (pinned version)** | None at 2026-05-15 |
 | **Maintenance status** | Active — 1.6.0 released May 2025; Tidelift subscription provides commercial support |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — core pytest infrastructure, Tidelift-backed, no CVEs |
 | **Permitted because** | Core pytest infrastructure; Tidelift-backed; no CVEs; MIT licence |
 
 ---
@@ -248,7 +248,7 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Licence** | Apache-2.0 AND BSD-2-Clause |
 | **CVEs (pinned version)** | None at 2026-05-15 |
 | **Maintenance status** | Active — 26.2 released April 2026 |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — PyPA (Python Packaging Authority), no CVEs |
 | **Permitted because** | PyPA is the authoritative Python packaging standards body; no CVEs; dual permissive licence |
 
 ---
@@ -262,7 +262,7 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Geo** | Unknown |
 | **Repository** | https://github.com/tartley/colorama |
 | **Licence** | BSD-3-Clause |
-| **CVEs (pinned version)** | None at 2026-05-15. A supply-chain typosquatting attack targeted a *different* package name (not colorama itself); pinned version 0.4.6 is unaffected |
+| **CVEs (pinned version)** | None at 2026-05-15 — a supply-chain typosquatting attack targeted a *different* package name (not colorama itself); pinned version 0.4.6 is unaffected |
 | **Maintenance status** | Dormant — last release January 2022; considered feature-complete and intentionally stable rather than abandoned |
 | **Risk rating** | ⚠️ Medium — dormant release cadence; low blast radius as test-only terminal formatting |
 | **Permitted because** | No unpatched CVEs; typosquatting targeted a different package; test-only dependency with no runtime exposure; BSD-3-Clause licence. Accepted with awareness of dormant status |
@@ -278,9 +278,9 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Geo** | Germany — geo-aligned |
 | **Repository** | https://github.com/pygments/pygments |
 | **Licence** | BSD-2-Clause |
-| **CVEs (pinned version)** | None at 2026-05-15. CVE-2026-4539 (ReDoS) affected earlier versions; [fixed in 2.20.0](https://nvd.nist.gov/vuln/detail/CVE-2026-4539). Pinned version is not affected |
+| **CVEs (pinned version)** | None at 2026-05-15 — [CVE-2026-4539](https://nvd.nist.gov/vuln/detail/CVE-2026-4539) (ReDoS, fixed in 2.20.0) does not affect this version |
 | **Maintenance status** | Active — 2.20.0 released March 2026 |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — German maintainer, geo-aligned, no unpatched CVEs |
 | **Permitted because** | German maintainer (geo-aligned); no unpatched CVEs in pinned version; BSD-2-Clause licence |
 
 ---
@@ -312,7 +312,7 @@ Every entry uses the following fields in this order. No entry omits a field; `No
 | **Licence** | PSF-2.0 |
 | **CVEs (pinned version)** | None at 2026-05-15 |
 | **Maintenance status** | Active — 4.15.0 released August 2025 |
-| **Risk rating** | ✅ Low |
+| **Risk rating** | ✅ Low — Python core team, PSF-2.0 licence, no CVEs |
 | **Permitted because** | Python core team; no CVEs; PSF-2.0 licence; standard library backport with minimal attack surface |
 
 ---
