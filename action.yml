@@ -211,6 +211,10 @@ runs:
         esac
         # Extraction failure always exits 1 — regardless of fail_on value.
         # fail_on only controls whether a valid REQUEST CHANGES verdict fails the workflow.
+        #
+        # The grep pattern matches the bold verdict format specified in scripts/review.py.
+        # Alternation order is intentional: longer strings must precede shorter ones so
+        # "APPROVE WITH NOTES" is not partially matched as "APPROVE".
         VERDICT=$(printf '%s' "$REVIEW" \
           | grep -oE '\*\*AI Recommendation: (APPROVE WITH NOTES|REQUEST CHANGES|APPROVE)\*\*' \
           | sed 's/\*\*AI Recommendation: //;s/\*\*$//' \
