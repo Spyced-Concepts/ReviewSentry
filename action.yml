@@ -248,9 +248,11 @@ runs:
         # The grep pattern matches the bold verdict format specified in scripts/review.py.
         # Alternation order is intentional: longer strings must precede shorter ones so
         # "APPROVE WITH NOTES" is not partially matched as "APPROVE".
+        # Match the verdict with or without the closing ** — the AI occasionally
+        # omits the trailing bold marker when output is cut off near token limit.
         VERDICT=$(printf '%s' "$REVIEW" \
-          | grep -oE '\*\*AI Recommendation: (APPROVE WITH NOTES|REQUEST CHANGES|APPROVE)\*\*' 2>/dev/null \
-          | sed 's/\*\*AI Recommendation: //;s/\*\*$//' \
+          | grep -oE '\*\*AI Recommendation: (APPROVE WITH NOTES|REQUEST CHANGES|APPROVE)\*{0,2}' 2>/dev/null \
+          | sed 's/\*\*AI Recommendation: //;s/\**//' \
           | tail -1 || echo "")
         if [ -z "$VERDICT" ]; then
           echo "::warning::Could not extract verdict from review output — the review may be incomplete (diff too large). Reduce PR scope or increase diff_lines. Expected one of: APPROVE, APPROVE WITH NOTES, REQUEST CHANGES"
