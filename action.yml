@@ -122,7 +122,7 @@ runs:
         GH_TOKEN: ${{ inputs.github_token }}
       run: |
         set -euo pipefail
-        gh pr diff "${{ inputs.pr_number }}" \
+        gh pr diff "${{ inputs.pr_number }}" --repo "$GITHUB_REPOSITORY" \
           | head -n "${{ inputs.diff_lines }}" > "$RUNNER_TEMP/pr_diff.txt" || true
         LINES=$(wc -l < "$RUNNER_TEMP/pr_diff.txt")
         if [ "${LINES:-0}" -eq 0 ]; then
