@@ -155,6 +155,7 @@ The `@v0` floating tag was removed on 2026-05-14. See the [CHANGELOG](CHANGELOG.
 | `diff_lines` | | `1500` | Max diff lines to send for review. If the diff exceeds this limit it is truncated and the review comment includes a visible warning: `> Diff was large — review based on first N lines only.` The action never fails due to diff size — it always posts a review, with the truncation note prepended when applicable. Reduce this value if you hit AI provider token limits; increase it for large refactors. |
 | `review_criteria` | | `""` | Additional review criteria, one per line |
 | `custom_rules` | | `""` | Custom sensitive data scan patterns, one per line |
+| `show_passing_criteria` | | `true` | Default: `true`. Whether to include passing criteria (no issues found) in the review output. Set to `false` to show only criteria with findings, keeping reviews concise on large PRs. Accepted values: `true`/`1`/`yes` or `false`/`0`/`no`. Any other value triggers a workflow warning and defaults to `true`. |
 | `github_token` | ✓ | — | GitHub token for posting the review comment |
 
 ## Outputs
