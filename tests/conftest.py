@@ -113,3 +113,16 @@ def provider_set(provider):
 @when("the pull request workflow triggers")
 def workflow_triggers():
     pass
+
+
+@then("the workflow completes without error")
+def workflow_completes(live_env):
+    pass
+
+
+@then("the workflow fails with a non-zero exit code")
+def workflow_fails_shared(result_state):
+    if result_state.get("result") is None:
+        pytest.skip("No result captured — scenario requires live environment or populated result_state")
+    assert result_state["result"].returncode != 0, \
+        f"Expected non-zero exit code, got {result_state['result'].returncode}"

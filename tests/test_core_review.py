@@ -17,13 +17,6 @@ scenarios("core_review.feature")
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-# ── Shared state ──────────────────────────────────────────────────────────────
-
-@pytest.fixture
-def result_state():
-    return {"result": None}
-
-
 # ── Given steps (live or local) ───────────────────────────────────────────────
 
 @given("the test repository has an open pull request with a non-empty diff")
@@ -91,11 +84,6 @@ def diff_with_model_slug(live_env):
 
 # ── Then steps ────────────────────────────────────────────────────────────────
 
-@then("the workflow completes without error")
-def workflow_completes(live_env):
-    pass
-
-
 @then("a comment is posted on the pull request")
 def comment_posted(live_env):
     pass
@@ -124,13 +112,6 @@ def no_external_api_key(live_env):
 @then('the review comment contains the truncation note "Diff was large — review based on first 10 lines only."')
 def truncation_note(live_env):
     pass
-
-
-@then("the workflow fails with a non-zero exit code")
-def workflow_fails(result_state):
-    assert result_state["result"] is not None, "No result captured — step setup may have been skipped"
-    assert result_state["result"].returncode != 0, \
-        f"Expected non-zero exit code, got {result_state['result'].returncode}"
 
 
 @then('the log contains "AI_API_KEY secret not configured"')
