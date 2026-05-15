@@ -46,7 +46,7 @@ if _show_raw in ("true", "1", "yes"):
 elif _show_raw in ("false", "0", "no"):
     SHOW_PASSING = False
 else:
-    print(f"::warning::show_passing_criteria has unrecognised value '{_show_raw}' — defaulting to true")
+    print(f"::warning::show_passing_criteria has unrecognised value '{_show_raw}' — accepted values: true/1/yes or false/0/no — defaulting to true")
     SHOW_PASSING = True
 
 SUPPORTED_PROVIDERS = {"anthropic", "openai", "gemini", "github-models"}
