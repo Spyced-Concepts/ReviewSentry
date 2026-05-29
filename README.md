@@ -111,7 +111,7 @@ jobs:
       pull-requests: write
       # models: read   # add this line if using github-models
     steps:
-      - uses: Spyced-Concepts/ReviewSentry@<commit-sha>  # see Releases for latest, e.g. v0.3.3-beta
+      - uses: Spyced-Concepts/ReviewSentry@cc0ff9f039146dcfa72f1d5e2460881213002cf4  # v0.3.5-beta
         with:
           ai_api_key:   ${{ secrets.YOUR_API_KEY }}
           ai_model:     your-model-identifier
@@ -126,11 +126,11 @@ See the [setup guides](docs/) for provider-specific instructions and model lists
 
 ### Version pinning — SHA only
 
-**SHA pinning is the only supported pattern.** Tags are mutable; floating tags (`@v0`, `@v1`) and version tags (`@v0.3.3-beta`) can all be rewritten by the maintainer or anyone who gains access to the repository, and consumers' next workflow run would silently execute the new code with their secrets. Pinning to a full commit SHA gives cryptographic immutability — the exact code you reviewed is the exact code that will run.
+**SHA pinning is the only supported pattern.** Tags are mutable; floating tags (`@v0`, `@v1`) and version tags (`@v0.3.5-beta`) can all be rewritten by the maintainer or anyone who gains access to the repository, and consumers' next workflow run would silently execute the new code with their secrets. Pinning to a full commit SHA gives cryptographic immutability — the exact code you reviewed is the exact code that will run.
 
 ```yaml
 # Recommended (the only supported pattern)
-- uses: Spyced-Concepts/ReviewSentry@<full-40-char-sha>  # v0.3.3-beta
+- uses: Spyced-Concepts/ReviewSentry@cc0ff9f039146dcfa72f1d5e2460881213002cf4  # v0.3.5-beta
 ```
 
 The trailing version comment is human metadata and is read by Dependabot, which can open auto-update PRs when newer releases ship.
