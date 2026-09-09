@@ -394,7 +394,16 @@ _FOOTER = (
     "— the final merge decision rests with the human maintainer.*"
 )
 
-review = enforce_review_discipline(review)
+review = enforce_review_discipline(
+    review,
+    diff_lines=diff.count("\n"),
+    diff_lines_limit=DIFF_LINES_LIMIT,
+    max_tokens=MAX_TOKENS,
+)
+
+unabridged_path = os.path.join(runner_temp, "review_full.md")
+with open(unabridged_path, "w", encoding="utf-8") as f:
+    f.write(f"## AI Code Review — unabridged\n\n{review}{_FOOTER}")
 
 parts = diff_utils.split_review_for_posting(review)
 n = len(parts)

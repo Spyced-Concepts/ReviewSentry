@@ -136,6 +136,19 @@ inputs:
       Default 3.
     required: false
     default: "3"
+  max_output_chars:
+    description: >
+      Split-into-comments threshold for the posted review. GitHub's hard PR
+      comment ceiling is 65,536; the default leaves a margin. Values below
+      10000 are clamped to 10000. Default 50000.
+    required: false
+    default: "50000"
+  per_section_budget_chars:
+    description: >
+      Per-section byte budget above which a finding renders as headline plus
+      details-collapse. Values below 200 are clamped to 200. Default 600.
+    required: false
+    default: "600"
 
 outputs:
   review:
@@ -316,9 +329,20 @@ runs:
         SHOW_PASSING_CRITERIA: ${{ inputs.show_passing_criteria }}
         MAX_TOKENS:            ${{ inputs.max_tokens }}
         PR_BODY_CHARS:         ${{ inputs.pr_body_chars }}
-        EXCLUDE_PATHS:         ${{ inputs.exclude_paths }}
-        CHUNK_THRESHOLD_LINES: ${{ inputs.chunk_threshold_lines }}
+        EXCLUDE_PATHS:            ${{ inputs.exclude_paths }}
+        CHUNK_THRESHOLD_LINES:    ${{ inputs.chunk_threshold_lines }}
+        MAX_OUTPUT_CHARS:         ${{ inputs.max_output_chars }}
+        PER_SECTION_BUDGET_CHARS: ${{ inputs.per_section_budget_chars }}
       run: python3 "${{ github.action_path }}/scripts/review.py"
+
+    - name: Upload unabridged review artefact
+      if: steps.draft-check.outputs.draft_skip != 'true' && steps.diff.outputs.skip != 'true'
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+      with:
+        name: reviewsentry-review-${{ inputs.pr_number }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/review_full.md
+        retention-days: 30
+        if-no-files-found: warn
 
     - name: Post review comment
       if: steps.draft-check.outputs.draft_skip != 'true' && steps.diff.outputs.skip != 'true'
@@ -328,9 +352,21 @@ runs:
         REVIEW_PARTS:  ${{ steps.review.outputs.review_parts }}
       run: |
         set -euo pipefail
+        _run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
         for i in $(seq 1 "${REVIEW_PARTS:-1}"); do
-          gh pr comment "${{ inputs.pr_number }}" --repo "$GITHUB_REPOSITORY" \
-            --body-file "$RUNNER_TEMP/review_part_${i}.md"
+          if [ "$i" = "${REVIEW_PARTS:-1}" ]; then
+            {
+              cat "$RUNNER_TEMP/review_part_${i}.md"
+              echo ""
+              echo "---"
+              echo "📎 Full unabridged review: [download from workflow-run artefacts](${_run_url})"
+            } > "$RUNNER_TEMP/review_part_${i}_final.md"
+            gh pr comment "${{ inputs.pr_number }}" --repo "$GITHUB_REPOSITORY" \
+              --body-file "$RUNNER_TEMP/review_part_${i}_final.md"
+          else
+            gh pr comment "${{ inputs.pr_number }}" --repo "$GITHUB_REPOSITORY" \
+              --body-file "$RUNNER_TEMP/review_part_${i}.md"
+          fi
         done
 
     - name: Check verdict
@@ -346,21 +382,12 @@ runs:
           *) echo "::warning::fail_on has unrecognised value '${FAIL_ON}' — accepted values: never, request_changes — defaulting to never"
              FAIL_ON="never" ;;
         esac
-        # Extraction failure always exits 0 with a warning — an incomplete review is not
-        # a signal that code should not be merged. fail_on only controls whether a valid
-        # REQUEST CHANGES verdict fails the workflow.
-        #
-        # The grep pattern matches the bold verdict format specified in scripts/review.py.
-        # Alternation order is intentional: longer strings must precede shorter ones so
-        # "APPROVE WITH NOTES" is not partially matched as "APPROVE".
-        # Match the verdict with or without the closing ** — the AI occasionally
-        # omits the trailing bold marker when output is cut off near token limit.
         VERDICT=$(printf '%s' "$REVIEW" \
           | grep -oE '\*\*AI Recommendation: (APPROVE WITH NOTES|REQUEST CHANGES|APPROVE)\*{0,2}' 2>/dev/null \
           | sed 's/\*\*AI Recommendation: //;s/\*\*$//' \
           | tail -1 || echo "")
         if [ -z "$VERDICT" ]; then
-          echo "::warning::Could not extract verdict from review output — the review may be incomplete (diff too large). Reduce PR scope or increase diff_lines. Expected one of: APPROVE, APPROVE WITH NOTES, REQUEST CHANGES"
+          echo "::warning::AI review did not end with a verdict — see the posted review comment for the incomplete-review notice with the measured cause."
           echo "verdict=" >> "$GITHUB_OUTPUT"
           exit 0
         fi
