@@ -14,12 +14,15 @@ Environment variables (set by action.yml):
     PR_NUMBER             — pull request number
     REVIEW_CRITERIA       — additional criteria lines (optional, backwards-compat)
     REVIEWSENTRY_CONFIG   — contents of .github/reviewsentry.yml (optional)
+    REVIEWSENTRY_CONFIG_DECODE_ERROR — decode error surfaced in the review (optional)
     SYSTEM_CONTEXT        — project-specific context appended to system prompt (optional)
     SHOW_PASSING_CRITERIA — include passing criteria in output (default: true)
     DIFF_LINES_LIMIT      — lines-per-chunk threshold (controls truncation or chunking)
     MAX_TOKENS            — maximum tokens for AI response (default: 4096)
     CUSTOM_RULES          — project-specific sensitive data patterns, one per line (optional)
     PR_BODY_CHARS         — maximum PR body characters to include in context (default: 2000)
+    EXCLUDE_PATHS         — comma-separated globs; matching files are not sent to the AI
+    CHUNK_THRESHOLD_LINES — per-file hunk-split threshold (default: 2000)
 """
 
 import importlib
@@ -50,6 +53,12 @@ SYSTEM_CONTEXT    = os.environ.get("SYSTEM_CONTEXT", "").strip()
 DIFF_LINES_LIMIT  = max(1, int(os.environ.get("DIFF_LINES_LIMIT", "1500")))
 MIN_TOKENS        = 256
 MAX_TOKENS        = max(MIN_TOKENS, int(os.environ.get("MAX_TOKENS", "4096")))
+
+EXCLUDE_PATHS = [
+    p.strip() for p in os.environ.get("EXCLUDE_PATHS", "").split(",") if p.strip()
+]
+CHUNK_THRESHOLD_LINES = max(50, int(os.environ.get("CHUNK_THRESHOLD_LINES", "2000")))
+CONFIG_DECODE_ERROR = os.environ.get("REVIEWSENTRY_CONFIG_DECODE_ERROR", "").strip()
 
 _SHOW_PASSING_KEY = "SHOW_PASSING_CRITERIA"
 _show_raw = os.environ.get(_SHOW_PASSING_KEY, "true").strip().lower()
@@ -273,10 +282,37 @@ def _call(prompt: str) -> str:
 
 # ── Dispatch ──────────────────────────────────────────────────────────────────
 
-file_diffs = diff_utils.split_diff_by_file(diff)
-all_paths  = [diff_utils.file_path(fd) for fd in file_diffs]
+file_diffs_raw = diff_utils.split_diff_by_file(diff)
 
-if chunk_large_diffs is True:
+file_diffs_kept, excluded_files = diff_utils.filter_by_exclude_paths(
+    file_diffs_raw, EXCLUDE_PATHS
+)
+
+file_diffs = [
+    chunk
+    for fd in file_diffs_kept
+    for chunk in diff_utils.chunk_single_file_diff(fd, CHUNK_THRESHOLD_LINES)
+]
+
+all_paths = [diff_utils.file_path(fd) for fd in file_diffs]
+diff = ''.join(file_diffs)
+
+if not file_diffs:
+    if excluded_files:
+        review = (
+            "## Nothing to review\n\n"
+            "All files in this PR were excluded per the `exclude_paths` input. "
+            "No AI review was performed. See the *Excluded from review* section "
+            "below for the list.\n\n"
+            "✅ **AI Recommendation: APPROVE**"
+        )
+    else:
+        review = (
+            "## Nothing to review\n\n"
+            "The diff for this PR was empty. No AI review was performed.\n\n"
+            "✅ **AI Recommendation: APPROVE**"
+        )
+elif chunk_large_diffs is True:
     # Multi-pass: split by file, batch into chunks, aggregate findings + worst verdict
     batches = diff_utils.batch_file_diffs(file_diffs, _CHAR_LIMIT)
     if len(batches) <= 1:
@@ -319,6 +355,33 @@ else:
             "Set `chunk_large_diffs: true` in `.github/reviewsentry.yml` to review all files:\n\n"
             + skipped_list
         )
+
+_prologue_parts: list[str] = []
+
+if CONFIG_DECODE_ERROR:
+    _prologue_parts.append(
+        f"> ⚠️ **`reviewsentry.yml` decode failure** — {CONFIG_DECODE_ERROR}. "
+        f"ReviewSentry ran with default settings. Investigate the file's "
+        f"encoding or contents."
+    )
+
+if excluded_files:
+    _excl_lines = "\n".join(
+        f"- `{path}` ({lines} lines)" for path, lines in excluded_files
+    )
+    _prologue_parts.append(
+        "## Excluded from review\n\n"
+        "The following files were excluded per the `exclude_paths` input and "
+        "their content was not sent to the AI:\n\n"
+        f"{_excl_lines}\n\n"
+        "Reviewing generated lockfiles line-by-line via LLM is rarely valuable "
+        "and often exceeds provider token limits. To review one anyway, remove "
+        "the matching glob from `exclude_paths` in your workflow inputs."
+    )
+
+if _prologue_parts:
+    review = "\n\n---\n\n".join(_prologue_parts) + "\n\n---\n\n" + review
+
 
 # ── Split review for posting ──────────────────────────────────────────────────
 

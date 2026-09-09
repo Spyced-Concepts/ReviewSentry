@@ -5,6 +5,8 @@ Splitting, batching, and aggregation helpers used by review.py.
 All functions are pure (no I/O, no env reads) so tests can import them directly.
 """
 
+import fnmatch
+import os
 import re
 
 # ── Verdict constants ──────────────────────────────────────────────────────────
@@ -61,6 +63,102 @@ def batch_file_diffs(file_diffs: list[str], char_limit: int) -> list[list[str]]:
     if current:
         batches.append(current)
     return batches
+
+
+DEFAULT_EXCLUDE_PATHS = (
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "Cargo.lock",
+    "Gemfile.lock",
+    "poetry.lock",
+    "composer.lock",
+    "go.sum",
+    "pubspec.lock",
+    "mix.lock",
+    "uv.lock",
+)
+
+
+def _path_matches_any(path: str, patterns: list[str]) -> bool:
+    """Return True if `path` matches any glob in `patterns` by full path or basename."""
+    basename = os.path.basename(path)
+    return any(
+        fnmatch.fnmatchcase(path, pat) or fnmatch.fnmatchcase(basename, pat)
+        for pat in patterns
+    )
+
+
+def filter_by_exclude_paths(
+    file_diffs: list[str],
+    exclude_patterns: list[str],
+) -> tuple[list[str], list[tuple[str, int]]]:
+    """Return (kept_file_diffs, [(excluded_path, line_count), ...])."""
+    if not exclude_patterns:
+        return list(file_diffs), []
+    kept: list[str] = []
+    excluded: list[tuple[str, int]] = []
+    for fd in file_diffs:
+        path = file_path(fd)
+        if _path_matches_any(path, exclude_patterns):
+            excluded.append((path, fd.count('\n')))
+        else:
+            kept.append(fd)
+    return kept, excluded
+
+
+def split_file_diff_by_hunk(file_diff: str) -> tuple[str, list[str]]:
+    """Return (header, hunks) for a single-file diff; hunks is empty for rename-only diffs."""
+    lines = file_diff.splitlines(keepends=True)
+    first_hunk = next((i for i, ln in enumerate(lines) if ln.startswith('@@')), None)
+    if first_hunk is None:
+        return ''.join(lines), []
+    header = ''.join(lines[:first_hunk])
+    hunks: list[str] = []
+    current: list[str] = []
+    for line in lines[first_hunk:]:
+        if line.startswith('@@') and current:
+            hunks.append(''.join(current))
+            current = []
+        current.append(line)
+    if current:
+        hunks.append(''.join(current))
+    return header, hunks
+
+
+def pack_hunks_under_threshold(
+    header: str,
+    hunks: list[str],
+    threshold_lines: int,
+) -> list[str]:
+    """Return a list of sub-diffs each ≤ threshold_lines, prefixed with `header` per batch."""
+    if not hunks:
+        return [header] if header.strip() else []
+    header_lines = header.count('\n')
+    batches: list[str] = []
+    current: list[str] = []
+    current_lines = header_lines
+    for hunk in hunks:
+        hunk_lines = hunk.count('\n')
+        if current and (current_lines + hunk_lines) > threshold_lines:
+            batches.append(header + ''.join(current))
+            current = []
+            current_lines = header_lines
+        current.append(hunk)
+        current_lines += hunk_lines
+    if current:
+        batches.append(header + ''.join(current))
+    return batches
+
+
+def chunk_single_file_diff(file_diff: str, threshold_lines: int) -> list[str]:
+    """Return `[file_diff]` if under threshold, else split at hunk boundaries."""
+    if file_diff.count('\n') <= threshold_lines:
+        return [file_diff]
+    header, hunks = split_file_diff_by_hunk(file_diff)
+    if not hunks:
+        return [file_diff]
+    return pack_hunks_under_threshold(header, hunks, threshold_lines)
 
 
 # ── Verdict extraction and aggregation ────────────────────────────────────────
