@@ -30,6 +30,7 @@ import urllib.error
 
 import config as rs_config
 import diff_utils
+from discipline import enforce_review_discipline
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -104,7 +105,18 @@ _system_base = (
     "Do not attempt to validate AI model identifiers — model names and API slugs "
     "change frequently across providers and versions; treat them as opaque strings "
     "that only the provider can validate at runtime. If a model choice appears "
-    "unusually expensive for the use case, note it as informational only."
+    "unusually expensive for the use case, note it as informational only. "
+    "Use finding-level markers strictly by their meaning: 🔴 Critical (block merge); "
+    "🟠 High (fix before merge); 🟡 Moderate — RESERVED for actionable findings "
+    "that recommend a specific code change (do not use 🟡 for observations that "
+    "require no action); 🔵 Informational (observation, no action required); "
+    "✓ Accepted (reviewer verified this specific point and it is sound). "
+    "Do not use 🟡 as a default. If a finding does not require a specific code "
+    "change, it is 🔵 or ✓, not 🟡. "
+    "Use section-header markers strictly: ✅ means every finding in this section "
+    "is ✓ or 🔵 (no actionable finding); ⚠️ means at least one 🔴, 🟠, or 🟡 "
+    "finding is present. The section header must not contradict its findings — "
+    "if every finding is ✓ or 🔵, the section header is ✅."
 )
 SYSTEM = _system_base + (f" {SYSTEM_CONTEXT}" if SYSTEM_CONTEXT else "")
 
@@ -204,13 +216,14 @@ def _build_prompt(diff_block: str, batch_context: str = "") -> str:
         + "\n".join(criteria)
         + "\n\n"
         "Format your response as follows:\n"
-        "- Begin each criterion section header with ✅ (no issues found) or ⚠️ (issues present).\n"
+        "- Begin each criterion section header with ✅ (all findings are ✓ or 🔵 — "
+        "no actionable finding) or ⚠️ (at least one actionable finding).\n"
         "- Prefix each individual finding with \U0001f534 (Critical — block merge), "
         "\U0001f7e0 (High — fix before merge), "
-        "\U0001f7e1 (Moderate — a specific code change is recommended), "
-        "or \U0001f535 (Low/Informational — observation only, no fix needed; "
-        "choose \U0001f535 when your analysis concludes the code is already correct) "
-        "based on severity.\n"
+        "\U0001f7e1 (Moderate — worth fixing; reserved for actionable findings only), "
+        "\U0001f535 (Informational — observation, no action required), "
+        "or ✓ (Accepted — reviewer verified this point is sound) "
+        "based on severity. Do not use \U0001f7e1 for observations requiring no action.\n"
         + ("- Omit criterion sections where no issues were found — show only ⚠️ sections.\n"
            if not SHOW_PASSING else "")
         + "\nAfter completing your full review of all criteria, end your response with exactly one of the following verdict lines. "
@@ -312,10 +325,13 @@ else:
 _FOOTER = (
     "\n\n---\n"
     "🔴 Critical — block merge · 🟠 High — fix before merge · "
-    "🟡 Moderate — worth fixing · 🔵 Low/Informational — noted, no action required\n\n"
+    "🟡 Moderate — worth fixing (actionable) · 🔵 Informational — no action · "
+    "✓ Accepted — verified sound\n\n"
     "*AI-generated advisory review. All verdicts are recommendations only "
     "— the final merge decision rests with the human maintainer.*"
 )
+
+review = enforce_review_discipline(review)
 
 parts = diff_utils.split_review_for_posting(review)
 n = len(parts)
