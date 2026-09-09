@@ -14,6 +14,11 @@ Feature: Output completeness — never clip on egress, warn honestly on incomple
     When the discipline hook runs with any measured values
     Then no incomplete-review warning is appended
 
+  Scenario: A review with a verdict-shaped string mid-body but not at the end is flagged as incomplete
+    Given a review body containing a verdict-shaped string in the middle but no trailing verdict
+    When the discipline hook runs with any measured values
+    Then an incomplete-review warning is appended
+
   Scenario: A review without a verdict and diff at the limit is flagged as diff-too-large
     Given a review body with no verdict line
     And the measured diff filled the diff_lines limit

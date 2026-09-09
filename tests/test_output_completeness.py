@@ -33,6 +33,17 @@ def review_with_verdict(state):
     state["review"] = "Section A\n- ✓ fine\n\n📝 **AI Recommendation: APPROVE WITH NOTES**"
 
 
+@given("a review body containing a verdict-shaped string in the middle but no trailing verdict")
+def review_verdict_midbody(state):
+    state["review"] = (
+        "Section A\n"
+        "- The reviewer template ends with lines like **AI Recommendation: APPROVE** — "
+        "  we quote it here as an example, not as our verdict.\n"
+        "Section B\n"
+        "- more text, no trailing verdict, mid-sentence like"
+    )
+
+
 @given("a review body with no verdict line")
 def review_no_verdict(state):
     state["review"] = "Partial review that was chopped mid-sentence and never emitted a"

@@ -12,6 +12,7 @@ _VERDICT_LINE_RE = re.compile(
     r"\*\*AI Recommendation:\s*(APPROVE WITH NOTES|REQUEST CHANGES|APPROVE)\*{0,2}"
 )
 _CHARS_PER_TOKEN = 4
+_INCOMPLETE_OUTPUT_RATIO = 0.9
 
 
 def enforce_colour_semantics(review_text: str) -> str:
@@ -62,8 +63,11 @@ def _section_has_actionable(body_lines: list[str]) -> bool:
 
 
 def has_verdict(review_text: str) -> bool:
-    """Return True if `review_text` ends with a valid AI Recommendation verdict line."""
-    return _VERDICT_LINE_RE.search(review_text) is not None
+    """Return True if the last non-empty line of `review_text` contains a valid AI Recommendation verdict."""
+    for line in reversed(review_text.splitlines()):
+        if line.strip():
+            return _VERDICT_LINE_RE.search(line) is not None
+    return False
 
 
 def derive_incomplete_cause(
@@ -79,7 +83,7 @@ def derive_incomplete_cause(
             f"diff too large — reached diff_lines ({diff_lines}/{diff_lines_limit}); "
             "reduce PR scope or raise diff_lines"
         )
-    if max_tokens_chars_estimate and output_chars >= int(max_tokens_chars_estimate * 0.9):
+    if max_tokens_chars_estimate and output_chars >= int(max_tokens_chars_estimate * _INCOMPLETE_OUTPUT_RATIO):
         return (
             f"output limit reached — review reached max_tokens (~{output_chars} of "
             f"~{max_tokens_chars_estimate} chars); raise max_tokens"
@@ -115,9 +119,9 @@ def enforce_incomplete_review_warning(
 
 def enforce_review_discipline(
     review_text: str,
-    diff_lines: int = 0,
-    diff_lines_limit: int = 0,
-    max_tokens: int = 0,
+    diff_lines: int,
+    diff_lines_limit: int,
+    max_tokens: int,
 ) -> str:
     """Return `review_text` after all discipline passes."""
     review_text = enforce_colour_semantics(review_text)
