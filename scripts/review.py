@@ -106,7 +106,6 @@ _system_base = (
     "change frequently across providers and versions; treat them as opaque strings "
     "that only the provider can validate at runtime. If a model choice appears "
     "unusually expensive for the use case, note it as informational only. "
-    # Colour discipline — RS-E-188-F-191
     "Use finding-level markers strictly by their meaning: 🔴 Critical (block merge); "
     "🟠 High (fix before merge); 🟡 Moderate — RESERVED for actionable findings "
     "that recommend a specific code change (do not use 🟡 for observations that "
@@ -332,8 +331,6 @@ _FOOTER = (
     "— the final merge decision rests with the human maintainer.*"
 )
 
-# Apply the shared review-discipline hook (RS-E-188-F-191) before splitting
-# for posting. Chain point for later sub-features — see scripts/discipline.py.
 review = enforce_review_discipline(review)
 
 parts = diff_utils.split_review_for_posting(review)
