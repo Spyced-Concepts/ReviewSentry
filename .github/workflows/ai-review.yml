@@ -1,9 +1,7 @@
 # ReviewSentry reviews its own pull requests.
-# Uses Anthropic Claude Haiku — fast and cost-efficient for self-review.
-# References functional-test directly — always uses the current stable version.
-# No manual pin updates needed. SHA pinning is for third-party consumers
-# protecting against supply chain attacks; not applicable for a repo
-# reviewing its own code with its own action.
+# Pinned to the current epic branch during epic development so that sub-PRs
+# of the epic are reviewed by the current state of the epic itself. Revert
+# to @functional-test once RS-E-188 (reliability epic) merges to functional-test.
 
 name: AI PR Review
 
@@ -22,7 +20,7 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - uses: Spyced-Concepts/ReviewSentry@functional-test
+      - uses: Spyced-Concepts/ReviewSentry@RS-E-188-review-reliability
         with:
           ai_api_key:   ${{ secrets.AI_API_KEY }}
           ai_model:     claude-haiku-4-5-20251001
@@ -31,3 +29,22 @@ jobs:
           pr_title:     ${{ github.event.pull_request.title }}
           pr_body:      ${{ github.event.pull_request.body }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          system_context: |
+            This repository enforces the following conventions. Do NOT recommend
+            changes that contradict them:
+            - No inline comments (`#` or `//`) in any source file. Do not
+              recommend adding them. If code needs explanation, the fix is
+              renaming, refactoring, or splitting — never a comment.
+            - Docstrings are one-line JSDoc-style. Do not recommend
+              multi-paragraph docstrings, "expected ranges" documentation,
+              parameter-type prose, or design-rationale docstrings.
+            - `0` is an accepted sentinel value for "unconfigured limit" in
+              this codebase. Do not flag `if X and ...` guard patterns on
+              int inputs where 0 means "no limit set" as bugs.
+            - `scripts/discipline.py` and other modules under `scripts/` are
+              repo-internal. There is no public API to break; do not describe
+              internal signature changes as "breaking public API changes".
+            - The PR body is authoritative for scope + deliberate deferrals.
+              If a change appears "unused", check the PR body for a
+              "Deliberately deferred to follow-up issues" section before
+              flagging it.
