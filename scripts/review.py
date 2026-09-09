@@ -14,12 +14,18 @@ Environment variables (set by action.yml):
     PR_NUMBER             — pull request number
     REVIEW_CRITERIA       — additional criteria lines (optional, backwards-compat)
     REVIEWSENTRY_CONFIG   — contents of .github/reviewsentry.yml (optional)
+    REVIEWSENTRY_CONFIG_DECODE_ERROR — decode error from action.yml config-fetch step
+                            (RS-E-188-F-189); surfaced at the top of the review.
     SYSTEM_CONTEXT        — project-specific context appended to system prompt (optional)
     SHOW_PASSING_CRITERIA — include passing criteria in output (default: true)
     DIFF_LINES_LIMIT      — lines-per-chunk threshold (controls truncation or chunking)
     MAX_TOKENS            — maximum tokens for AI response (default: 4096)
     CUSTOM_RULES          — project-specific sensitive data patterns, one per line (optional)
     PR_BODY_CHARS         — maximum PR body characters to include in context (default: 2000)
+    EXCLUDE_PATHS         — comma-separated glob list of paths to skip (RS-E-188-F-189).
+                            Empty string = no exclusions. Defaults handled in action.yml.
+    CHUNK_THRESHOLD_LINES — per-file threshold above which a single file's diff
+                            is split at hunk boundaries (RS-E-188-F-189, default 2000).
 """
 
 import importlib
@@ -49,6 +55,13 @@ SYSTEM_CONTEXT    = os.environ.get("SYSTEM_CONTEXT", "").strip()
 DIFF_LINES_LIMIT  = max(1, int(os.environ.get("DIFF_LINES_LIMIT", "1500")))
 MIN_TOKENS        = 256
 MAX_TOKENS        = max(MIN_TOKENS, int(os.environ.get("MAX_TOKENS", "4096")))
+
+# Sub-feature A of #188 (RS-E-188-F-189) — robust large-input handling.
+EXCLUDE_PATHS = [
+    p.strip() for p in os.environ.get("EXCLUDE_PATHS", "").split(",") if p.strip()
+]
+CHUNK_THRESHOLD_LINES = max(50, int(os.environ.get("CHUNK_THRESHOLD_LINES", "2000")))
+CONFIG_DECODE_ERROR = os.environ.get("REVIEWSENTRY_CONFIG_DECODE_ERROR", "").strip()
 
 _SHOW_PASSING_KEY = "SHOW_PASSING_CRITERIA"
 _show_raw = os.environ.get(_SHOW_PASSING_KEY, "true").strip().lower()
@@ -260,10 +273,51 @@ def _call(prompt: str) -> str:
 
 # ── Dispatch ──────────────────────────────────────────────────────────────────
 
-file_diffs = diff_utils.split_diff_by_file(diff)
-all_paths  = [diff_utils.file_path(fd) for fd in file_diffs]
+file_diffs_raw = diff_utils.split_diff_by_file(diff)
 
-if chunk_large_diffs is True:
+# RS-E-188-F-189: apply exclude_paths BEFORE any downstream processing so
+# excluded files never contribute to size, chunking, or token usage.
+file_diffs_kept, excluded_files = diff_utils.filter_by_exclude_paths(
+    file_diffs_raw, EXCLUDE_PATHS
+)
+
+# RS-E-188-F-189: apply within-file hunk chunking so that a single file
+# whose diff exceeds CHUNK_THRESHOLD_LINES is split into hunk-boundary
+# sub-chunks. Small files pass through as-is (returned in a 1-element list).
+file_diffs = [
+    chunk
+    for fd in file_diffs_kept
+    for chunk in diff_utils.chunk_single_file_diff(fd, CHUNK_THRESHOLD_LINES)
+]
+
+all_paths = [diff_utils.file_path(fd) for fd in file_diffs]
+
+# RS-E-188-F-189: reconstruct the diff string from the filtered/chunked file
+# diffs so downstream code paths that still reference the raw string see the
+# same set of files that will be batched. Everything past this point works
+# from `diff` OR `file_diffs`; both are now consistent.
+diff = ''.join(file_diffs)
+
+# RS-E-188-F-189: all-excluded short-circuit. If the exclude_paths filter
+# dropped every file (or the diff was empty to begin with), skip the model
+# call entirely and emit an honest informational review with a synthetic
+# APPROVE verdict — the "review" is that there was nothing to review.
+if not file_diffs:
+    if excluded_files:
+        review = (
+            "## Nothing to review\n\n"
+            "All files in this PR were excluded per the `exclude_paths` input. "
+            "No AI review was performed. See the *Excluded from review* section "
+            "below for the list.\n\n"
+            "✅ **AI Recommendation: APPROVE**"
+        )
+    else:
+        review = (
+            "## Nothing to review\n\n"
+            "The diff for this PR was empty. No AI review was performed.\n\n"
+            "✅ **AI Recommendation: APPROVE**"
+        )
+elif chunk_large_diffs is True:
     # Multi-pass: split by file, batch into chunks, aggregate findings + worst verdict
     batches = diff_utils.batch_file_diffs(file_diffs, _CHAR_LIMIT)
     if len(batches) <= 1:
@@ -306,6 +360,41 @@ else:
             "Set `chunk_large_diffs: true` in `.github/reviewsentry.yml` to review all files:\n\n"
             + skipped_list
         )
+
+# ── Prologue — machine-generated notices prepended to the review ─────────────
+#
+# RS-E-188-F-189: surface any config decode failure AND any exclude_paths
+# skips in the posted review, so the reader sees exactly what wasn't looked
+# at and why. These notices go BEFORE the model output — they are honest
+# machine reports, not model claims, and downstream discipline post-
+# processing does not touch them (they use ## headings, not ✅/⚠️ markers).
+
+_prologue_parts: list[str] = []
+
+if CONFIG_DECODE_ERROR:
+    _prologue_parts.append(
+        f"> ⚠️ **`reviewsentry.yml` decode failure** — {CONFIG_DECODE_ERROR}. "
+        f"ReviewSentry ran with default settings. Investigate the file's "
+        f"encoding or contents."
+    )
+
+if excluded_files:
+    _excl_lines = "\n".join(
+        f"- `{path}` ({lines} lines)" for path, lines in excluded_files
+    )
+    _prologue_parts.append(
+        "## Excluded from review\n\n"
+        "The following files were excluded per the `exclude_paths` input and "
+        "their content was not sent to the AI:\n\n"
+        f"{_excl_lines}\n\n"
+        "Reviewing generated lockfiles line-by-line via LLM is rarely valuable "
+        "and often exceeds provider token limits. To review one anyway, remove "
+        "the matching glob from `exclude_paths` in your workflow inputs."
+    )
+
+if _prologue_parts:
+    review = "\n\n---\n\n".join(_prologue_parts) + "\n\n---\n\n" + review
+
 
 # ── Split review for posting ──────────────────────────────────────────────────
 

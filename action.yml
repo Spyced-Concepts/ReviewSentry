@@ -116,6 +116,35 @@ inputs:
       the description as incomplete. Values below 50 are clamped to 50.
     required: false
     default: "2000"
+  exclude_paths:
+    description: >
+      Comma-separated list of glob patterns for paths never sent to the AI
+      (RS-E-188-F-189). Matched against both the full path and the basename.
+      Reviewing generated lockfiles line-by-line is rarely valuable and often
+      exceeds provider token limits. Excluded files are enumerated at the top
+      of the review so exclusions are honest. Set to "" (empty string) to
+      disable the default lockfile suite. Default matches common lockfiles.
+    required: false
+    default: "package-lock.json,yarn.lock,pnpm-lock.yaml,Cargo.lock,Gemfile.lock,poetry.lock,composer.lock,go.sum,pubspec.lock,mix.lock,uv.lock"
+  chunk_threshold_lines:
+    description: >
+      Per-file threshold above which a single file's diff is split at hunk
+      boundaries so no one file can blow the model's context window
+      (RS-E-188-F-189). File-level chunking (chunk_large_diffs in
+      reviewsentry.yml) splits at file boundaries; this input handles the
+      remaining case where one file's diff alone is bigger than a chunk.
+      Values below 50 are clamped to 50. Default 2000.
+    required: false
+    default: "2000"
+  diff_fetch_retries:
+    description: >
+      Number of retries when the diff-capture step returns an empty diff for
+      a PR whose GitHub metadata reports changed_files > 0 (RS-E-188-F-189).
+      This distinguishes a genuinely empty PR (sync/whitespace) from the
+      merge-state race that can happen right after PR creation. Values below
+      1 are clamped to 1. Default 3.
+    required: false
+    default: "3"
 
 outputs:
   review:
@@ -165,13 +194,17 @@ runs:
         HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       run: |
         GH_ERR=$(mktemp)
+        DECODE_ERROR=""
         ENCODED=$(gh api "repos/$REPO/contents/.github/reviewsentry.yml?ref=$HEAD_SHA" \
           --jq '.content' 2>"$GH_ERR" || true)
         if [ -n "$ENCODED" ]; then
           B64_ERR=$(mktemp)
           CONFIG=$(printf '%s' "$ENCODED" | base64 -d 2>"$B64_ERR" || true)
           if [ -s "$B64_ERR" ]; then
-            echo "::warning::Failed to decode .github/reviewsentry.yml content: $(cat "$B64_ERR") — using defaults"
+            # RS-E-188-F-189: capture the decode error verbatim so review.py
+            # can surface it in the posted review, not just in the workflow log.
+            DECODE_ERROR="Failed to decode .github/reviewsentry.yml content: $(cat "$B64_ERR")"
+            echo "::warning::${DECODE_ERROR} — using defaults"
             CONFIG=""
           fi
           rm -f "$B64_ERR"
@@ -193,6 +226,10 @@ runs:
           printf '%s' "${CONFIG:-}"
           echo ""
           echo "${_DELIM}"
+          # RS-E-188-F-189: propagate the decode error to review.py so the
+          # posted review carries a Warning banner rather than a silent
+          # fall-back-to-defaults. Empty string when no decode failure.
+          echo "REVIEWSENTRY_CONFIG_DECODE_ERROR=${DECODE_ERROR}"
         } >> "$GITHUB_ENV"
 
     - name: Capture PR diff
@@ -200,14 +237,64 @@ runs:
       id: diff
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.github_token }}
+        GH_TOKEN:            ${{ inputs.github_token }}
+        DIFF_FETCH_RETRIES:  ${{ inputs.diff_fetch_retries }}
       run: |
         set -euo pipefail
+
+        # RS-E-188-F-189: distinguish "genuinely empty PR" (sync, whitespace,
+        # branch tip realignment — changed_files == 0) from "empty response
+        # due to a merge-state race" (changed_files > 0 but diff API returns
+        # nothing). The first is an exit-0 with an informational note; the
+        # second must retry with backoff, and fail loudly if still empty.
+        # Closes #178.
+
+        _retries=$(printf '%s' "${DIFF_FETCH_RETRIES:-3}" | tr -d ' ')
+        case "$_retries" in
+          ''|*[!0-9]*) _retries=3 ;;
+        esac
+        if [ "$_retries" -lt 1 ]; then _retries=1; fi
+
+        # Look up the PR's own metadata once — cheap, and it is the only
+        # source of truth for "does this PR actually have changed files".
+        CHANGED_FILES=$(gh pr view "${{ inputs.pr_number }}" \
+          --repo "$GITHUB_REPOSITORY" \
+          --json changedFiles \
+          --jq '.changedFiles' 2>/dev/null || echo "0")
+        case "$CHANGED_FILES" in
+          ''|*[!0-9]*) CHANGED_FILES=0 ;;
+        esac
+
         GH_DIFF_ERR=$(mktemp)
-        gh pr diff "${{ inputs.pr_number }}" --repo "$GITHUB_REPOSITORY" \
-          > "$RUNNER_TEMP/pr_diff.txt" 2>"$GH_DIFF_ERR" || true
-        LINES=$(wc -l < "$RUNNER_TEMP/pr_diff.txt")
+        LINES=0
+        for attempt in $(seq 1 "$_retries"); do
+          gh pr diff "${{ inputs.pr_number }}" --repo "$GITHUB_REPOSITORY" \
+            > "$RUNNER_TEMP/pr_diff.txt" 2>"$GH_DIFF_ERR" || true
+          LINES=$(wc -l < "$RUNNER_TEMP/pr_diff.txt")
+          if [ "${LINES:-0}" -gt 0 ]; then
+            break
+          fi
+          if [ "$CHANGED_FILES" -eq 0 ]; then
+            # Genuinely empty — no retry needed.
+            break
+          fi
+          if [ "$attempt" -lt "$_retries" ]; then
+            _sleep=$((attempt * 3))
+            echo "::warning::Empty diff but PR reports ${CHANGED_FILES} changed files — likely merge-state race — retry ${attempt}/${_retries} after ${_sleep}s"
+            sleep "$_sleep"
+          fi
+        done
+
         if [ "${LINES:-0}" -eq 0 ]; then
+          if [ "$CHANGED_FILES" -gt 0 ]; then
+            # RS-E-188-F-189: the empty-but-should-not-be case. Failing
+            # loudly is deliberately different from posting a no-changes
+            # comment — a silent-success no-review is exactly the failure
+            # mode #178 exists to close.
+            echo "::error::Could not obtain PR diff after ${_retries} retries; PR reports ${CHANGED_FILES} changed files. This may be a merge-state race — re-run the workflow. Exiting non-zero to prevent a silent no-review."
+            rm -f "$GH_DIFF_ERR"
+            exit 1
+          fi
           if [ -s "$GH_DIFF_ERR" ]; then
             echo "::warning::gh pr diff produced no output: $(cat "$GH_DIFF_ERR")"
           fi
@@ -252,10 +339,13 @@ runs:
         CUSTOM_RULES:          ${{ inputs.custom_rules }}
         DIFF_LINES_LIMIT:      ${{ inputs.diff_lines }}
         SYSTEM_CONTEXT:        ${{ inputs.system_context }}
-        REVIEWSENTRY_CONFIG:   ${{ env.REVIEWSENTRY_CONFIG }}
+        REVIEWSENTRY_CONFIG:               ${{ env.REVIEWSENTRY_CONFIG }}
+        REVIEWSENTRY_CONFIG_DECODE_ERROR:  ${{ env.REVIEWSENTRY_CONFIG_DECODE_ERROR }}
         SHOW_PASSING_CRITERIA: ${{ inputs.show_passing_criteria }}
         MAX_TOKENS:            ${{ inputs.max_tokens }}
         PR_BODY_CHARS:         ${{ inputs.pr_body_chars }}
+        EXCLUDE_PATHS:         ${{ inputs.exclude_paths }}
+        CHUNK_THRESHOLD_LINES: ${{ inputs.chunk_threshold_lines }}
       run: python3 "${{ github.action_path }}/scripts/review.py"
 
     - name: Post review comment

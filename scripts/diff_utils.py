@@ -3,8 +3,16 @@ ReviewSentry diff utilities.
 
 Splitting, batching, and aggregation helpers used by review.py.
 All functions are pure (no I/O, no env reads) so tests can import them directly.
+
+Sub-feature A of epic #188 (RS-E-188-F-189) added:
+    - filter_by_exclude_paths — drop generated / lockfile paths before review
+    - split_file_diff_by_hunk / pack_hunks_under_threshold / chunk_single_file_diff
+      — within-file hunk-boundary chunking so a single oversized file
+      (package-lock.json etc.) no longer blows the model's context window
 """
 
+import fnmatch
+import os
 import re
 
 # ── Verdict constants ──────────────────────────────────────────────────────────
@@ -61,6 +69,141 @@ def batch_file_diffs(file_diffs: list[str], char_limit: int) -> list[list[str]]:
     if current:
         batches.append(current)
     return batches
+
+
+# ── Sub-feature A of #188 — exclude_paths filtering ──────────────────────────
+
+
+def _path_matches_any(path: str, patterns: list[str]) -> bool:
+    """Return True if ``path`` matches any glob in ``patterns``.
+
+    Patterns are matched against the full path AND the basename, so both
+    ``package-lock.json`` (bare filename) and ``build/**/*.json`` (subtree)
+    glob styles work as expected.
+    """
+    basename = os.path.basename(path)
+    for pat in patterns:
+        if fnmatch.fnmatchcase(path, pat) or fnmatch.fnmatchcase(basename, pat):
+            return True
+    return False
+
+
+def filter_by_exclude_paths(
+    file_diffs: list[str],
+    exclude_patterns: list[str],
+) -> tuple[list[str], list[tuple[str, int]]]:
+    """Split ``file_diffs`` into (kept, excluded).
+
+    ``excluded`` is a list of ``(path, line_count)`` tuples so callers can
+    render an *"Excluded from review"* section listing what was skipped and
+    by how much. An empty ``exclude_patterns`` list is a no-op — everything
+    is kept.
+    """
+    if not exclude_patterns:
+        return list(file_diffs), []
+    kept: list[str] = []
+    excluded: list[tuple[str, int]] = []
+    for fd in file_diffs:
+        path = file_path(fd)
+        if _path_matches_any(path, exclude_patterns):
+            excluded.append((path, fd.count('\n')))
+        else:
+            kept.append(fd)
+    return kept, excluded
+
+
+# ── Sub-feature A of #188 — within-file hunk-boundary chunking ───────────────
+
+# Sensible default suite of lockfiles that are almost always machine-generated
+# and rarely valuable to review line-by-line. Callers may extend or replace.
+DEFAULT_EXCLUDE_PATHS = (
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "Cargo.lock",
+    "Gemfile.lock",
+    "poetry.lock",
+    "composer.lock",
+    "go.sum",
+    "pubspec.lock",
+    "mix.lock",
+    "uv.lock",
+)
+
+
+def split_file_diff_by_hunk(file_diff: str) -> tuple[str, list[str]]:
+    """Split a single-file diff into (header, hunks).
+
+    ``header`` carries the ``diff --git`` / ``index`` / ``---`` / ``+++`` lines
+    that precede the first hunk. ``hunks`` is a list of ``@@`` blocks, each
+    including its own ``@@`` header and content lines up to (but not including)
+    the next ``@@`` — or end of the file diff.
+
+    A file diff with no hunks (pure rename, mode change, etc.) returns the
+    whole thing as the header with an empty ``hunks`` list.
+    """
+    lines = file_diff.splitlines(keepends=True)
+    first_hunk = next((i for i, ln in enumerate(lines) if ln.startswith('@@')), None)
+    if first_hunk is None:
+        return ''.join(lines), []
+    header = ''.join(lines[:first_hunk])
+    hunks: list[str] = []
+    current: list[str] = []
+    for line in lines[first_hunk:]:
+        if line.startswith('@@') and current:
+            hunks.append(''.join(current))
+            current = []
+        current.append(line)
+    if current:
+        hunks.append(''.join(current))
+    return header, hunks
+
+
+def pack_hunks_under_threshold(
+    header: str,
+    hunks: list[str],
+    threshold_lines: int,
+) -> list[str]:
+    """Pack ``hunks`` into sub-diffs each ≤ ``threshold_lines``, prefixing
+    every batch with ``header`` so the reviewer always sees which file is
+    being examined.
+
+    A hunk that exceeds ``threshold_lines`` on its own is emitted in a batch
+    of its own — never split further, and never dropped. This matches the
+    behaviour of ``batch_file_diffs`` for oversized single files.
+    """
+    if not hunks:
+        return [header] if header.strip() else []
+    header_lines = header.count('\n')
+    batches: list[str] = []
+    current: list[str] = []
+    current_lines = header_lines
+    for hunk in hunks:
+        hunk_lines = hunk.count('\n')
+        if current and (current_lines + hunk_lines) > threshold_lines:
+            batches.append(header + ''.join(current))
+            current = []
+            current_lines = header_lines
+        current.append(hunk)
+        current_lines += hunk_lines
+    if current:
+        batches.append(header + ''.join(current))
+    return batches
+
+
+def chunk_single_file_diff(file_diff: str, threshold_lines: int) -> list[str]:
+    """Return ``[file_diff]`` if the diff is under threshold; otherwise
+    split by hunk boundary and return multiple sub-diffs each ≤ threshold.
+
+    Each returned sub-diff carries the file's header (``diff --git`` /
+    ``---`` / ``+++``) so the reviewer knows which file it is looking at.
+    """
+    if file_diff.count('\n') <= threshold_lines:
+        return [file_diff]
+    header, hunks = split_file_diff_by_hunk(file_diff)
+    if not hunks:
+        return [file_diff]  # nothing to split — usually a rename with no body
+    return pack_hunks_under_threshold(header, hunks, threshold_lines)
 
 
 # ── Verdict extraction and aggregation ────────────────────────────────────────
