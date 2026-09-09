@@ -44,6 +44,15 @@ def review_verdict_midbody(state):
     )
 
 
+@given(parsers.parse("a review body ending with a verdict line where trailing asterisks are truncated to {trailing}"))
+def review_verdict_truncated(state, trailing):
+    suffix = {
+        "zero": "**AI Recommendation: APPROVE",
+        "one": "**AI Recommendation: APPROVE*",
+    }[trailing]
+    state["review"] = f"Section A\n- fine\n\n{suffix}"
+
+
 @given("a review body with no verdict line")
 def review_no_verdict(state):
     state["review"] = "Partial review that was chopped mid-sentence and never emitted a"

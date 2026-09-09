@@ -19,6 +19,16 @@ Feature: Output completeness — never clip on egress, warn honestly on incomple
     When the discipline hook runs with any measured values
     Then an incomplete-review warning is appended
 
+  Scenario Outline: A review whose verdict line was truncated mid-asterisks is still recognised as complete
+    Given a review body ending with a verdict line where trailing asterisks are truncated to <trailing>
+    When the discipline hook runs with any measured values
+    Then no incomplete-review warning is appended
+
+    Examples:
+      | trailing |
+      | zero     |
+      | one      |
+
   Scenario: A review without a verdict and diff at the limit is flagged as diff-too-large
     Given a review body with no verdict line
     And the measured diff filled the diff_lines limit
